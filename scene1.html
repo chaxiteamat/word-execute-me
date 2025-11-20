@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World.execute(me) - 场景1: Switch on the power line</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #canvas {
+            border: 1px solid #222;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #555;
+        }
+        
+        button:active {
+            background-color: #222;
+        }
+        
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #888;
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        .scene-title {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 18px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="info">
+        <p>场景1: Switch on the power line / Remember to put on PROTECTION</p>
+        <p>时间戳: 00:00.00 - 00:03.00</p>
+    </div>
+    
+    <div class="scene-title">
+        <p>电源启动与安全防护</p>
+    </div>
+    
+    <div class="controls">
+        <button id="playBtn">播放</button>
+        <button id="resetBtn">重置</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.8;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画状态
+        let animationId;
+        let isPlaying = false;
+        let startTime;
+        let currentTime = 0;
+        const animationDuration = 3000; // 3秒动画时长
+        
+        // 电路板参数
+        const circuitBoard = {
+            gridSize: 30,
+            dotRadius: 2,
+            lineColor: '#222',
+            dotColor: '#333'
+        };
+        
+        // 电流参数
+        const electricCurrent = {
+            paths: [],
+            speed: 2,
+            particles: [],
+            color: '#fff'
+        };
+        
+        // 电源开关参数
+        const powerSwitch = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 80,
+            height: 40,
+            isOn: false,
+            switchAngle: 0
+        };
+        
+        // 绝缘护具参数
+        const protection = {
+            x: canvas.width / 2 + 150,
+            y: canvas.height / 2,
+            width: 80,
+            height: 100,
+            opacity: 0,
+            warningOpacity: 0
+        };
+        
+        // 初始化电路板路径
+        function initCircuitPaths() {
+            electricCurrent.paths = [];
+            
+            // 创建几条主要电路路径
+            // 水平路径1
+            electricCurrent.paths.push({
+                points: [
+                    {x: 100, y: canvas.height / 2 - 100},
+                    {x: canvas.width - 100, y: canvas.height / 2 - 100}
+                ],
+                active: false
+            });
+            
+            // 水平路径2
+            electricCurrent.paths.push({
+                points: [
+                    {x: 100, y: canvas.height / 2},
+                    {x: canvas.width - 100, y: canvas.height / 2}
+                ],
+                active: false
+            });
+            
+            // 水平路径3
+            electricCurrent.paths.push({
+                points: [
+                    {x: 100, y: canvas.height / 2 + 100},
+                    {x: canvas.width - 100, y: canvas.height / 2 + 100}
+                ],
+                active: false
+            });
+            
+            // 垂直连接路径
+            electricCurrent.paths.push({
+                points: [
+                    {x: canvas.width / 2 - 150, y: canvas.height / 2 - 100},
+                    {x: canvas.width / 2 - 150, y: canvas.height / 2 + 100}
+                ],
+                active: false
+            });
+            
+            electricCurrent.paths.push({
+                points: [
+                    {x: canvas.width / 2 + 150, y: canvas.height / 2 - 100},
+                    {x: canvas.width / 2 + 150, y: canvas.height / 2 + 100}
+                ],
+                active: false
+            });
+        }
+        
+        // 初始化电流粒子
+        function initElectricParticles() {
+            electricCurrent.particles = [];
+            
+            electricCurrent.paths.forEach((path, pathIndex) => {
+                // 每条路径上创建多个粒子
+                const particleCount = 5;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    electricCurrent.particles.push({
+                        pathIndex: pathIndex,
+                        position: i / particleCount, // 0到1的位置
+                        size: 3 + Math.random() * 2,
+                        speed: 0.005 + Math.random() * 0.01,
+                        opacity: 0.7 + Math.random() * 0.3
+                    });
+                }
+            });
+        }
+        
+        // 绘制电路板背景
+        function drawCircuitBoard() {
+            ctx.strokeStyle = circuitBoard.lineColor;
+            ctx.fillStyle = circuitBoard.dotColor;
+            
+            // 绘制网格点
+            for (let x = 0; x < canvas.width; x += circuitBoard.gridSize) {
+                for (let y = 0; y < canvas.height; y += circuitBoard.gridSize) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, circuitBoard.dotRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // 绘制电路路径
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            electricCurrent.paths.forEach(path => {
+                ctx.beginPath();
+                ctx.moveTo(path.points[0].x, path.points[0].y);
+                
+                for (let i = 1; i < path.points.length; i++) {
+                    ctx.lineTo(path.points[i].x, path.points[i].y);
+                }
+                
+                ctx.stroke();
+            });
+        }
+        
+        // 绘制电流
+        function drawElectricCurrent(progress) {
+            // 只有在开关按下后才激活路径
+            if (progress > 0.5) {
+                electricCurrent.paths[0].active = true;
+            }
+            if (progress > 0.6) {
+                electricCurrent.paths[1].active = true;
+            }
+            if (progress > 0.7) {
+                electricCurrent.paths[2].active = true;
+            }
+            if (progress > 0.8) {
+                electricCurrent.paths[3].active = true;
+                electricCurrent.paths[4].active = true;
+            }
+            
+            // 绘制电流粒子
+            ctx.fillStyle = electricCurrent.color;
+            
+            electricCurrent.particles.forEach(particle => {
+                if (electricCurrent.paths[particle.pathIndex].active) {
+                    const path = electricCurrent.paths[particle.pathIndex];
+                    const position = particle.position;
+                    
+                    // 计算粒子在路径上的位置
+                    let x, y;
+                    
+                    if (path.points.length === 2) {
+                        // 直线路径
+                        x = path.points[0].x + (path.points[1].x - path.points[0].x) * position;
+                        y = path.points[0].y + (path.points[1].y - path.points[0].y) * position;
+                    } else {
+                        // 更复杂的路径（这里简化处理）
+                        const segmentIndex = Math.floor(position * (path.points.length - 1));
+                        const segmentPosition = (position * (path.points.length - 1)) % 1;
+                        
+                        const startPoint = path.points[segmentIndex];
+                        const endPoint = path.points[Math.min(segmentIndex + 1, path.points.length - 1)];
+                        
+                        x = startPoint.x + (endPoint.x - startPoint.x) * segmentPosition;
+                        y = startPoint.y + (endPoint.y - startPoint.y) * segmentPosition;
+                    }
+                    
+                    // 绘制粒子
+                    ctx.globalAlpha = particle.opacity * progress;
+                    ctx.beginPath();
+                    ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 更新粒子位置
+                    particle.position += particle.speed;
+                    if (particle.position > 1) {
+                        particle.position = 0;
+                    }
+                }
+            });
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        // 绘制电源开关
+        function drawPowerSwitch(progress) {
+            const x = powerSwitch.x;
+            const y = powerSwitch.y;
+            const width = powerSwitch.width || 80;
+            const height = powerSwitch.height || 40;
+            
+            // 根据进度计算开关状态
+            if (progress > 0.5) {
+                powerSwitch.isOn = true;
+                powerSwitch.switchAngle = Math.min(1, (progress - 0.5) * 2);
+            }
+            
+            // 绘制开关底座
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x - width/2 - 5, y - height/2 - 5, width + 10, height + 10);
+            
+            // 绘制船型开关主体
+            ctx.save();
+            ctx.translate(x, y);
+            
+            // 船型开关底座
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.roundRect(-width/2, -height/2, width, height, height/2);
+            ctx.fill();
+            
+            // 船型开关按钮
+            const buttonWidth = width * 0.8;
+            const buttonHeight = height * 0.7;
+            const maxAngle = Math.PI / 6; // 最大倾斜角度（30度）
+            const currentAngle = powerSwitch.isOn ? maxAngle * powerSwitch.switchAngle : -maxAngle * (1 - powerSwitch.switchAngle);
+            
+            ctx.save();
+            ctx.rotate(currentAngle);
+            
+            // 按钮渐变
+            const gradient = ctx.createLinearGradient(0, -buttonHeight/2, 0, buttonHeight/2);
+            
+            if (powerSwitch.isOn) {
+                // 开启状态 - 白色发光
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(0.5, '#eee');
+                gradient.addColorStop(1, '#ccc');
+            } else {
+                // 关闭状态 - 灰色
+                gradient.addColorStop(0, '#666');
+                gradient.addColorStop(0.5, '#555');
+                gradient.addColorStop(1, '#444');
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(-buttonWidth/2, -buttonHeight/2, buttonWidth, buttonHeight, buttonHeight/2);
+            ctx.fill();
+            
+            // 按钮边框
+            ctx.strokeStyle = powerSwitch.isOn ? '#fff' : '#666';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 按钮高光效果
+            ctx.fillStyle = powerSwitch.isOn ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.roundRect(-buttonWidth/2 + 5, -buttonHeight/2 + 3, buttonWidth - 10, buttonHeight/3, buttonHeight/6);
+            ctx.fill();
+            
+            ctx.restore();
+            
+            // 发光效果
+            if (powerSwitch.isOn && powerSwitch.switchAngle > 0.5) {
+                ctx.save();
+                ctx.globalAlpha = powerSwitch.switchAngle * 0.5;
+                ctx.shadowBlur = 20 * powerSwitch.switchAngle;
+                ctx.shadowColor = '#fff';
+                
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.roundRect(-buttonWidth/2, -buttonHeight/2, buttonWidth, buttonHeight, buttonHeight/2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            // 状态指示灯
+            const lightX = width/2 + 15;
+            const lightY = 0;
+            
+            ctx.beginPath();
+            ctx.arc(lightX, lightY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = powerSwitch.isOn ? '#fff' : '#333';
+            ctx.fill();
+            
+            if (powerSwitch.isOn) {
+                // 指示灯发光效果
+                ctx.save();
+                ctx.globalAlpha = powerSwitch.switchAngle;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#fff';
+                ctx.beginPath();
+                ctx.arc(lightX, lightY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制绝缘护具
+        function drawProtection(progress) {
+            // 根据进度计算透明度
+            if (progress > 0.7) {
+                protection.opacity = Math.min(1, (progress - 0.7) * 3.33);
+            }
+            
+            if (progress > 0.9) {
+                protection.warningOpacity = Math.min(1, (progress - 0.9) * 10);
+            }
+            
+            const x = protection.x;
+            const y = protection.y;
+            const width = protection.width;
+            const height = protection.height;
+            
+            ctx.save();
+            ctx.globalAlpha = protection.opacity;
+            
+            // 绘制绝缘防护服（更直观的防护装备）
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 3;
+            ctx.fillStyle = '#444';
+            
+            // 防护服主体
+            ctx.beginPath();
+            // 头部防护
+            ctx.arc(x, y - height * 0.35, width * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 身体防护
+            ctx.beginPath();
+            ctx.moveTo(x - width * 0.3, y - height * 0.2);
+            ctx.lineTo(x - width * 0.4, y + height * 0.3);
+            ctx.lineTo(x + width * 0.4, y + height * 0.3);
+            ctx.lineTo(x + width * 0.3, y - height * 0.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 手臂防护
+            // 左臂
+            ctx.beginPath();
+            ctx.moveTo(x - width * 0.3, y - height * 0.1);
+            ctx.lineTo(x - width * 0.5, y + height * 0.1);
+            ctx.lineTo(x - width * 0.45, y + height * 0.3);
+            ctx.lineTo(x - width * 0.25, y + height * 0.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 右臂
+            ctx.beginPath();
+            ctx.moveTo(x + width * 0.3, y - height * 0.1);
+            ctx.lineTo(x + width * 0.5, y + height * 0.1);
+            ctx.lineTo(x + width * 0.45, y + height * 0.3);
+            ctx.lineTo(x + width * 0.25, y + height * 0.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 防护面罩
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(x, y - height * 0.35, width * 0.2, height * 0.15, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 防护服反光条（增加细节）
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 2;
+            
+            // 胸前反光条
+            ctx.beginPath();
+            ctx.moveTo(x - width * 0.2, y);
+            ctx.lineTo(x + width * 0.2, y);
+            ctx.stroke();
+            
+            // 手臂反光条
+            ctx.beginPath();
+            ctx.moveTo(x - width * 0.4, y + height * 0.1);
+            ctx.lineTo(x - width * 0.3, y + height * 0.15);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(x + width * 0.4, y + height * 0.1);
+            ctx.lineTo(x + width * 0.3, y + height * 0.15);
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            // 绘制警告标志
+            if (protection.warningOpacity > 0) {
+                ctx.save();
+                ctx.globalAlpha = protection.warningOpacity;
+                
+                const warningX = x + width * 0.8;
+                const warningY = y - height * 0.8;
+                const warningSize = 35;
+                
+                // 警告三角形背景
+                ctx.fillStyle = '#888';
+                ctx.beginPath();
+                ctx.moveTo(warningX, warningY - warningSize/2);
+                ctx.lineTo(warningX - warningSize/2, warningY + warningSize/2);
+                ctx.lineTo(warningX + warningSize/2, warningY + warningSize/2);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 警告三角形边框
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 感叹号
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('!', warningX, warningY);
+                
+                // 添加"PROTECTION"文字
+                ctx.fillStyle = '#888';
+                ctx.font = '12px monospace';
+                ctx.fillText('PROTECTION', warningX, warningY + warningSize/2 + 15);
+                
+                // 添加闪电符号表示电气危险
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(warningX - 10, warningY + warningSize/2 + 30);
+                ctx.lineTo(warningX, warningY + warningSize/2 + 25);
+                ctx.lineTo(warningX - 5, warningY + warningSize/2 + 25);
+                ctx.lineTo(warningX + 10, warningY + warningSize/2 + 20);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+        }
+        
+        // 绘制场景文字
+        function drawSceneText(progress) {
+            if (progress > 0.3) {
+                const textOpacity = Math.min(1, (progress - 0.3) * 1.43);
+                
+                ctx.save();
+                ctx.globalAlpha = textOpacity;
+                ctx.fillStyle = '#888';
+                ctx.font = '16px monospace';
+                ctx.textAlign = 'center';
+                
+                const text1 = "Switch on the power line";
+                const text2 = "Remember to put on PROTECTION";
+                
+                ctx.fillText(text1, canvas.width / 2, canvas.height - 80);
+                ctx.fillText(text2, canvas.width / 2, canvas.height - 50);
+                
+                ctx.restore();
+            }
+        }
+        
+        // 渲染函数
+        function render() {
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 计算动画进度
+            const progress = Math.min(1, currentTime / animationDuration);
+            
+            // 绘制场景元素
+            drawCircuitBoard();
+            drawElectricCurrent(progress);
+            drawPowerSwitch(progress);
+            drawProtection(progress);
+            drawSceneText(progress);
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            currentTime = timestamp - startTime;
+            
+            render();
+            
+            if (currentTime < animationDuration && isPlaying) {
+                animationId = requestAnimationFrame(animate);
+            } else if (currentTime >= animationDuration) {
+                isPlaying = false;
+                playBtn.textContent = '重新播放';
+            }
+        }
+        
+        // 播放按钮事件
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                startTime = null;
+                playBtn.textContent = '暂停';
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isPlaying = false;
+                playBtn.textContent = '继续';
+                cancelAnimationFrame(animationId);
+            }
+        });
+        
+        // 重置按钮事件
+        resetBtn.addEventListener('click', () => {
+            isPlaying = false;
+            currentTime = 0;
+            startTime = null;
+            powerSwitch.isOn = false;
+            powerSwitch.switchAngle = 0;
+            protection.opacity = 0;
+            protection.warningOpacity = 0;
+            electricCurrent.paths.forEach(path => path.active = false);
+            
+            playBtn.textContent = '播放';
+            cancelAnimationFrame(animationId);
+            render();
+        });
+        
+        // 初始化
+        function init() {
+            // 更新电源开关位置
+            powerSwitch.x = canvas.width / 2;
+            powerSwitch.y = canvas.height / 2;
+            
+            // 更新绝缘护具位置
+            protection.x = canvas.width * 0.3;
+            protection.y = canvas.height / 2;
+            
+            initCircuitPaths();
+            initElectricParticles();
+            render();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
