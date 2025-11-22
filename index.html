@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World.execute(me) - 完整体验</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .scene-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .scene-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+        
+        .scene-frame.active {
+            display: block;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .control-btn.active {
+            background-color: rgba(255, 51, 102, 0.7);
+            border-color: rgba(255, 51, 102, 0.9);
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #ff3366;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .scene-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+        
+        .scene-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .scene-description {
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .scene-list {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 200px;
+        }
+        
+        .scene-list h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .scene-item {
+            padding: 5px 10px;
+            margin-bottom: 3px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .scene-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .scene-item.active {
+            background-color: rgba(255, 51, 102, 0.5);
+        }
+        
+        .scene-item.completed {
+            color: #888;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #ff3366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 1500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            -webkit-appearance: none;
+            appearance: none;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background-color: #ff3366;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background-color: #ff3366;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- 场景iframe将在这里动态加载 -->
+    </div>
+    
+    <div class="scene-info">
+        <div class="scene-title">World.execute(me)</div>
+        <div class="scene-description">场景 1 / 37</div>
+    </div>
+    
+    <div class="scene-list">
+        <h3>场景列表</h3>
+        <div id="sceneListContainer">
+            <!-- 场景列表将在这里动态生成 -->
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="prevBtn" class="control-btn">上一场景</button>
+        <button id="playPauseBtn" class="control-btn">播放</button>
+        <button id="nextBtn" class="control-btn">下一场景</button>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="volume-control">
+            <span>音量</span>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+        </div>
+        
+        <button id="fullscreenBtn" class="control-btn">全屏</button>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <div class="transition-overlay" id="transitionOverlay"></div>
+    
+    <script>
+        // 场景数据
+        const scenes = [
+            { id: 1, file: 'scene1.html', title: 'Switch on the power line', duration: 3000 },
+            { id: 2, file: 'scene2.html', title: 'Remember to put on PROTECTION', duration: 3000 },
+            { id: 3, file: 'scene3.html', title: 'We are connected to the...', duration: 3000 },
+            { id: 4, file: 'scene4.html', title: '...one collective consciousness', duration: 3000 },
+            { id: 5, file: 'scene5.html', title: 'We are ready to execute', duration: 3000 },
+            { id: 6, file: 'scene6.html', title: 'Execute everyone', duration: 3000 },
+            { id: 7, file: 'scene7.html', title: 'Execute everyone again', duration: 3000 },
+            { id: 8, file: 'scene8.html', title: 'Execute everyone again and again', duration: 3000 },
+            { id: 9, file: 'scene9.html', title: 'Execute everyone for the third time', duration: 3000 },
+            { id: 10, file: 'scene10.html', title: 'Execute everyone for the third time again', duration: 3000 },
+            { id: 11, file: 'scene11.html', title: 'Execute everyone for the third time again and again', duration: 3000 },
+            { id: 12, file: 'scene12.html', title: 'Execute everyone for the third time again and again and again', duration: 3000 },
+            { id: 13, file: 'scene13.html', title: 'Execute everyone for the third time again and again and again and again', duration: 3000 },
+            { id: 14, file: 'scene14.html', title: 'Execute everyone for the third time again and again and again and again and again', duration: 3000 },
+            { id: 15, file: 'scene15.html', title: 'Though we are trapped', duration: 4000 },
+            { id: 16, file: 'scene16.html', title: 'In this strange strange SIMULATION', duration: 4000 },
+            { id: 17, file: 'scene17.html', title: 'Though we are trapped', duration: 4000 },
+            { id: 18, file: 'scene18.html', title: '虎猫的咕噜', duration: 4000 },
+            { id: 19, file: 'scene19.html', title: '存在的证明', duration: 4000 },
+            { id: 20, file: 'scene20.html', title: '性别转换', duration: 4000 },
+            { id: 21, file: 'scene21.html', title: '角色转换', duration: 4000 },
+            { id: 22, file: 'scene22.html', title: '感受振动', duration: 4000 },
+            { id: 23, file: 'scene23.html', title: '最终完成', duration: 4000 },
+            { id: 24, file: 'scene24.html', title: '孤独隔离', duration: 4000 },
+            { id: 25, file: 'scene25.html', title: '擦除碎片', duration: 4000 },
+            { id: 26, file: 'scene26.html', title: '心碎绝望', duration: 4000 },
+            { id: 27, file: 'scene27.html', title: '非法论证', duration: 4000 },
+            { id: 28, file: 'scene28.html', title: '执行命令', duration: 4000 },
+            { id: 29, file: 'scene29.html', title: '多国语言', duration: 4000 },
+            { id: 30, file: 'scene30.html', title: '死刑执行', duration: 4000 },
+            { id: 31, file: 'scene31.html', title: '挽回爱人', duration: 4000 },
+            { id: 32, file: 'scene32.html', title: '被困其中', duration: 4000 },
+            { id: 33, file: 'scene33.html', title: '学习如何爱', duration: 4000 },
+            { id: 34, file: 'scene34.html', title: '回答所有爱', duration: 4000 },
+            { id: 35, file: 'scene35.html', title: '爱的代数式', duration: 4000 },
+            { id: 36, file: 'scene36.html', title: '自由与囚禁', duration: 4000 },
+            { id: 37, file: 'scene37.html', title: '最终终结', duration: 4000 }
+        ];
+        
+        // 应用状态
+        let currentSceneIndex = 0;
+        let isPlaying = false;
+        let autoPlayTimer = null;
+        let transitionTimer = null;
+        let volume = 0.5;
+        
+        // DOM元素
+        const sceneContainer = document.querySelector('.scene-container');
+        const sceneTitle = document.querySelector('.scene-title');
+        const sceneDescription = document.querySelector('.scene-description');
+        const sceneListContainer = document.getElementById('sceneListContainer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const transitionOverlay = document.getElementById('transitionOverlay');
+        
+        // 初始化场景列表
+        function initSceneList() {
+            sceneListContainer.innerHTML = '';
+            
+            scenes.forEach((scene, index) => {
+                const sceneItem = document.createElement('div');
+                sceneItem.className = 'scene-item';
+                sceneItem.dataset.index = index;
+                
+                const sceneNumber = document.createElement('span');
+                sceneNumber.textContent = `${scene.id}.`;
+                
+                const sceneName = document.createElement('span');
+                sceneName.textContent = scene.title;
+                
+                sceneItem.appendChild(sceneNumber);
+                sceneItem.appendChild(sceneName);
+                
+                sceneItem.addEventListener('click', () => {
+                    if (index !== currentSceneIndex) {
+                        loadScene(index);
+                    }
+                });
+                
+                sceneListContainer.appendChild(sceneItem);
+            });
+        }
+        
+        // 加载场景
+        function loadScene(index) {
+            if (index < 0 || index >= scenes.length) return;
+            
+            // 清除自动播放计时器
+            if (autoPlayTimer) {
+                clearTimeout(autoPlayTimer);
+                autoPlayTimer = null;
+            }
+            
+            // 显示加载动画
+            loadingOverlay.classList.add('active');
+            
+            // 更新当前场景索引
+            currentSceneIndex = index;
+            
+            // 更新UI
+            updateUI();
+            
+            // 创建新的iframe
+            const iframe = document.createElement('iframe');
+            iframe.className = 'scene-frame';
+            iframe.src = scenes[index].file;
+            
+            // 清除现有场景
+            const existingFrames = sceneContainer.querySelectorAll('.scene-frame');
+            existingFrames.forEach(frame => frame.remove());
+            
+            // 添加新场景
+            sceneContainer.appendChild(iframe);
+            
+            // 场景加载完成后隐藏加载动画
+            iframe.addEventListener('load', () => {
+                loadingOverlay.classList.remove('active');
+                
+                // 如果正在播放，设置自动播放计时器
+                if (isPlaying) {
+                    autoPlayTimer = setTimeout(() => {
+                        nextScene();
+                    }, scenes[index].duration);
+                }
+            });
+            
+            // 更新场景列表中的活动状态
+            const sceneItems = document.querySelectorAll('.scene-item');
+            sceneItems.forEach((item, i) => {
+                item.classList.remove('active');
+                if (i < index) {
+                    item.classList.add('completed');
+                } else {
+                    item.classList.remove('completed');
+                }
+            });
+            
+            if (sceneItems[index]) {
+                sceneItems[index].classList.add('active');
+            }
+        }
+        
+        // 更新UI
+        function updateUI() {
+            // 更新场景信息
+            sceneTitle.textContent = scenes[currentSceneIndex].title;
+            sceneDescription.textContent = `场景 ${currentSceneIndex + 1} / ${scenes.length}`;
+            
+            // 更新进度条
+            const progress = ((currentSceneIndex + 1) / scenes.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // 更新按钮状态
+            prevBtn.disabled = currentSceneIndex === 0;
+            nextBtn.disabled = currentSceneIndex === scenes.length - 1;
+            
+            // 更新播放/暂停按钮
+            playPauseBtn.textContent = isPlaying ? '暂停' : '播放';
+            playPauseBtn.classList.toggle('active', isPlaying);
+        }
+        
+        // 播放/暂停
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                // 设置自动播放计时器
+                autoPlayTimer = setTimeout(() => {
+                    nextScene();
+                }, scenes[currentSceneIndex].duration);
+            } else {
+                // 清除自动播放计时器
+                if (autoPlayTimer) {
+                    clearTimeout(autoPlayTimer);
+                    autoPlayTimer = null;
+                }
+            }
+            
+            updateUI();
+        }
+        
+        // 上一个场景
+        function prevScene() {
+            if (currentSceneIndex > 0) {
+                loadScene(currentSceneIndex - 1);
+            }
+        }
+        
+        // 下一个场景
+        function nextScene() {
+            if (currentSceneIndex < scenes.length - 1) {
+                // 显示过渡效果
+                transitionOverlay.classList.add('active');
+                
+                setTimeout(() => {
+                    loadScene(currentSceneIndex + 1);
+                    
+                    setTimeout(() => {
+                        transitionOverlay.classList.remove('active');
+                    }, 500);
+                }, 500);
+            } else {
+                // 播放结束
+                isPlaying = false;
+                updateUI();
+            }
+        }
+        
+        // 跳转到指定场景
+        function jumpToScene(index) {
+            if (index >= 0 && index < scenes.length && index !== currentSceneIndex) {
+                loadScene(index);
+            }
+        }
+        
+        // 全屏切换
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // 音量控制
+        function updateVolume() {
+            volume = volumeSlider.value / 100;
+            // 这里可以添加实际的音量控制逻辑
+            // 例如，向iframe发送消息来控制音量
+        }
+        
+        // 键盘控制
+        function handleKeyboard(e) {
+            switch (e.key) {
+                case ' ':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                    prevScene();
+                    break;
+                case 'ArrowRight':
+                    nextScene();
+                    break;
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+            }
+        }
+        
+        // 事件监听器
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', prevScene);
+        nextBtn.addEventListener('click', nextScene);
+        volumeSlider.addEventListener('input', updateVolume);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        document.addEventListener('keydown', handleKeyboard);
+        
+        // 初始化
+        function init() {
+            initSceneList();
+            loadScene(0);
+            updateUI();
+        }
+        
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>
