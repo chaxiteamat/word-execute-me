@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景18：猫咪与愉悦</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+
+        .cat-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-in-out forwards;
+        }
+
+        .cat {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .cat-image {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            animation: purr 1s infinite ease-in-out;
+        }
+
+        /* 声波效果 */
+        .sound-wave {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        .sound-wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .sound-wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        /* 爱心粒子 */
+        .heart-particle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            opacity: 0;
+            background-color: #ff6b6b;
+            transform: rotate(-45deg);
+            animation: heartBeat 0.75s infinite;
+        }
+
+        .heart-particle::before,
+        .heart-particle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6b6b;
+            border-radius: 50%;
+        }
+
+        .heart-particle::before {
+            top: -10px;
+            left: 0;
+        }
+
+        .heart-particle::after {
+            left: 10px;
+            top: 0;
+        }
+
+        /* 歌词显示 */
+        .lyrics-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .lyrics-line {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #fff;
+            font-weight: bold;
+            opacity: 0;
+        }
+
+        .lyrics-line.second {
+            margin-top: 20px;
+        }
+
+        .lyrics-translation {
+            font-size: 20px;
+            color: #aaa;
+            opacity: 0;
+        }
+
+        .lyrics-translation.second {
+            margin-bottom: 10px;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes soundWave {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        @keyframes purr {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes floatUp {
+            0% { 
+                opacity: 0;
+                transform: translateY(0) rotate(-45deg) scale(0);
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(0) rotate(-45deg) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(-180px) rotate(-45deg) scale(1);
+            }
+            100% { 
+                opacity: 0;
+                transform: translateY(-200px) rotate(-45deg) scale(0.5);
+            }
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: rotate(-45deg) scale(1); }
+            50% { transform: rotate(-45deg) scale(1.1); }
+        }
+
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(30deg); }
+            50% { transform: rotate(45deg); }
+        }
+
+        .cat-head {
+            animation: purr 1s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="cat-container">
+            <div class="cat">
+                <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub Octocat" class="cat-image">
+            </div>
+            <div class="sound-wave"></div>
+            <div class="sound-wave"></div>
+            <div class="sound-wave"></div>
+        </div>
+
+        <div class="lyrics-container">
+            <div class="lyrics-line">If I'm a tabby cat</div>
+            <div class="lyrics-translation">如果我是一只花猫</div>
+            <div class="lyrics-line second">Then I will purr for your ENJOYMENT</div>
+            <div class="lyrics-translation second">那么我会为你的愉悦而咕噜</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 声波动画
+            const soundWaves = document.querySelectorAll('.sound-wave');
+            
+            setTimeout(() => {
+                soundWaves.forEach((wave, index) => {
+                    setTimeout(() => {
+                        wave.style.animation = 'soundWave 1s infinite ease-out';
+                        wave.style.animationDelay = `${index * 0.25}s`;
+                    }, index * 250);
+                });
+            }, 400);
+
+            // 创建爱心粒子
+            function createHeartParticle() {
+                const heart = document.createElement('div');
+                heart.classList.add('heart-particle');
+                
+                // 随机位置
+                const startX = Math.random() * 300 + 50;
+                const startY = Math.random() * 100 + 200;
+                
+                heart.style.left = `${startX}px`;
+                heart.style.top = `${startY}px`;
+                
+                document.querySelector('.scene-container').appendChild(heart);
+                
+                // 动画
+                heart.style.animation = 'floatUp 3s ease-out forwards';
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    heart.remove();
+                }, 3000);
+            }
+
+            // 定期创建爱心粒子
+            setTimeout(() => {
+                setInterval(createHeartParticle, 250);
+            }, 1000);
+
+            // 显示歌词
+            const lyricsContainer = document.querySelector('.lyrics-container');
+            const firstLyrics = lyricsContainer.querySelector('.lyrics-line:not(.second)');
+            const firstTranslation = lyricsContainer.querySelector('.lyrics-translation:not(.second)');
+            const secondLyrics = lyricsContainer.querySelector('.lyrics-line.second');
+            const secondTranslation = lyricsContainer.querySelector('.lyrics-translation.second');
+            
+            // 显示歌词
+            setTimeout(() => {
+                firstLyrics.style.opacity = '1';
+                firstLyrics.style.animation = 'fadeIn 0.3s ease-in-out forwards';
+                firstTranslation.style.opacity = '1';
+                firstTranslation.style.animation = 'fadeIn 0.3s ease-in-out forwards';
+            }, 800);
+             
+            // 然后显示第二句歌词
+            setTimeout(() => {
+                secondLyrics.style.opacity = '1';
+                secondLyrics.style.animation = 'fadeIn 0.3s ease-in-out forwards';
+                secondTranslation.style.opacity = '1';
+                secondTranslation.style.animation = 'fadeIn 0.3s ease-in-out forwards';
+            }, 1200);
+        });
+    </script>
+</body>
+</html>
