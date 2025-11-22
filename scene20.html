@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景20：性别转换与自由</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #111 0%, #222 50%, #111 100%);
+            overflow: hidden;
+        }
+
+        /* 网格背景 */
+        .grid-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        /* 性别符号容器 */
+        .gender-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* 性别符号基础样式 */
+        .gender-symbol {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            transition: all 1.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gender-symbol svg {
+            width: 100%;
+            height: 100%;
+            transition: all 1.5s ease-in-out;
+            transform-origin: center center;
+            transform-box: fill-box;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        /* 女性符号 */
+        .female-symbol {
+            opacity: 1;
+            transform: scale(1);
+            z-index: 11;
+        }
+
+        .female-symbol svg {
+            fill: none;
+            stroke: #999;
+            filter: drop-shadow(0 0 10px rgba(153, 153, 153, 0.7));
+        }
+
+        /* 男性符号 */
+        .male-symbol {
+            opacity: 0;
+            transform: scale(0.8) rotate(180deg);
+            z-index: 12;
+        }
+
+        .male-symbol svg {
+            fill: none;
+            stroke: #fff;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9));
+        }
+
+        /* 转换中的状态 */
+        .female-symbol.transforming {
+            opacity: 0;
+            transform: scale(0.7) rotate(-180deg);
+        }
+
+        .male-symbol.transforming {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        /* 旋转动画修复 */
+        .gender-symbol {
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        /* 转换光晕 */
+        .transition-glow {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: all 1.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        /* 自由度指标 */
+        .freedom-meter {
+            position: absolute;
+            bottom: 150px;
+            width: 60%;
+            max-width: 600px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .freedom-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #666 0%, #fff 100%);
+            border-radius: 15px;
+            transition: width 2s ease-in-out;
+        }
+
+        .freedom-label {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            color: #aaa;
+            letter-spacing: 2px;
+        }
+
+        .freedom-value {
+            position: absolute;
+            top: 35px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        /* 表达方式图标 */
+        .expression-icons {
+            position: absolute;
+            top: 100px;
+            width: 80%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .expression-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 0 10px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s ease-in-out;
+        }
+
+        .expression-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: #fff;
+        }
+
+        /* 时间轴 */
+        .timeline {
+            position: absolute;
+            bottom: 80px;
+            width: 60%;
+            max-width: 600px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #000 0%, #fff 100%);
+            border-radius: 5px;
+            transition: width 4s linear;
+        }
+
+        .timeline-labels {
+            position: absolute;
+            bottom: 60px;
+            width: 60%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .timeline-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        /* 歌词显示 */
+        .lyrics-container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 20;
+            opacity: 0;
+        }
+
+        .lyrics {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        .translation {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 转换效果 */
+        .transition-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 5;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- 网格背景 -->
+        <div class="grid-background"></div>
+        
+        <!-- 性别符号容器 -->
+        <div class="gender-container">
+            <!-- 转换光晕 -->
+            <div class="transition-glow"></div>
+            
+            <!-- 女性符号 -->
+            <div class="gender-symbol female-symbol">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(50, 50)">
+                        <circle cx="0" cy="0" r="18" fill="none" stroke="currentColor" stroke-width="4"/>
+                        <line x1="0" y1="18" x2="0" y2="50" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="-15" y1="35" x2="15" y2="35" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                </svg>
+            </div>
+            
+            <!-- 男性符号 -->
+            <div class="gender-symbol male-symbol">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(50, 50)">
+                        <circle cx="0" cy="0" r="15" fill="none" stroke="currentColor" stroke-width="4"/>
+                        <line x1="0" y1="-15" x2="0" y2="15" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="0" y1="-15" x2="15" y2="-30" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="15" y1="-30" x2="15" y2="-20" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="10" y1="-25" x2="15" y2="-30" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- 表达方式图标 -->
+        <div class="expression-icons">
+            <div class="expression-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16Z"/>
+                </svg>
+            </div>
+            <div class="expression-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+                </svg>
+            </div>
+            <div class="expression-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V7H9V9H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V9M13,9V3.5L18.5,9H13Z"/>
+                </svg>
+            </div>
+            <div class="expression-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+                </svg>
+            </div>
+            <div class="expression-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V7H9V9H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V9M13,9V3.5L18.5,9H13Z"/>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- 自由度指标 -->
+        <div class="freedom-meter">
+            <div class="freedom-label">FREEDOM LEVEL</div>
+            <div class="freedom-progress"></div>
+            <div class="freedom-value">0%</div>
+        </div>
+        
+        <!-- 时间轴 -->
+        <div class="timeline">
+            <div class="timeline-progress"></div>
+        </div>
+        <div class="timeline-labels">
+            <div class="timeline-label">AM</div>
+            <div class="timeline-label">PM</div>
+        </div>
+        
+        <!-- 歌词容器 -->
+        <div class="lyrics-container">
+            <div class="lyrics">Switch my gender / To F to M / And then do whatever</div>
+            <div class="translation">转换我的性别 / 从女到男 / 然后随心所欲</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取元素
+            const femaleSymbol = document.querySelector('.female-symbol');
+            const maleSymbol = document.querySelector('.male-symbol');
+            const transitionGlow = document.querySelector('.transition-glow');
+            const freedomProgress = document.querySelector('.freedom-progress');
+            const freedomValue = document.querySelector('.freedom-value');
+            const expressionIcons = document.querySelectorAll('.expression-icon');
+            const timelineProgress = document.querySelector('.timeline-progress');
+            const timelineLabels = document.querySelector('.timeline-labels');
+            const lyricsContainer = document.querySelector('.lyrics-container');
+            
+            // 显示歌词
+            setTimeout(() => {
+                lyricsContainer.style.opacity = '1';
+                lyricsContainer.style.animation = 'fadeIn 1s ease-in-out forwards';
+            }, 500);
+            
+            // 开始转换过程
+            setTimeout(() => {
+                // 显示转换光晕
+                transitionGlow.style.left = '50%';
+                transitionGlow.style.top = '50%';
+                transitionGlow.style.opacity = '1';
+                transitionGlow.style.transform = 'translate(-50%, -50%) scale(1)';
+                
+                // 同时进行符号转换
+                femaleSymbol.classList.add('transforming');
+                maleSymbol.classList.add('transforming');
+                
+                // 光晕消失
+                setTimeout(() => {
+                    transitionGlow.style.opacity = '0';
+                    transitionGlow.style.transform = 'translate(-50%, -50%) scale(0)';
+                }, 1500);
+            }, 2500);
+            
+            // 显示自由度指标
+            setTimeout(() => {
+                const freedomMeter = document.querySelector('.freedom-meter');
+                freedomMeter.style.opacity = '1';
+                freedomMeter.style.animation = 'fadeIn 1s ease-in-out forwards';
+                
+                // 增加自由度
+                setTimeout(() => {
+                    freedomProgress.style.width = '100%';
+                    
+                    // 更新自由度数值
+                    let value = 0;
+                    const interval = setInterval(() => {
+                        value += 2;
+                        freedomValue.textContent = `${value}%`;
+                        if (value >= 100) {
+                            clearInterval(interval);
+                        }
+                    }, 40);
+                }, 500);
+            }, 4000);
+            
+            // 显示表达方式图标
+            setTimeout(() => {
+                const iconsContainer = document.querySelector('.expression-icons');
+                iconsContainer.style.opacity = '1';
+                iconsContainer.style.animation = 'fadeIn 1s ease-in-out forwards';
+                
+                // 逐个显示图标
+                expressionIcons.forEach((icon, index) => {
+                    setTimeout(() => {
+                        icon.style.opacity = '1';
+                        icon.style.transform = 'scale(1)';
+                        icon.style.animation = 'pulse 2s infinite ease-in-out';
+                        icon.style.animationDelay = `${index * 0.2}s`;
+                    }, index * 200);
+                });
+            }, 5000);
+            
+            // 显示时间轴
+            setTimeout(() => {
+                const timeline = document.querySelector('.timeline');
+                timeline.style.opacity = '1';
+                timeline.style.animation = 'fadeIn 1s ease-in-out forwards';
+                
+                timelineLabels.style.opacity = '1';
+                timelineLabels.style.animation = 'fadeIn 1s ease-in-out forwards';
+                
+                // 时间轴进度
+                setTimeout(() => {
+                    timelineProgress.style.width = '100%';
+                }, 500);
+            }, 6000);
+        });
+    </script>
+</body>
+</html>
