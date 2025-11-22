@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World.execute(me) - Scene 14</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .scene-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .terminal {
+            width: 80%;
+            max-width: 800px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .terminal-button.red {
+            background-color: #ff5f56;
+        }
+
+        .terminal-button.yellow {
+            background-color: #ffbd2e;
+        }
+
+        .terminal-button.green {
+            background-color: #27c93f;
+        }
+
+        .terminal-body {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            margin-top: 20px;
+            opacity: 0;
+        }
+
+        .option {
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .option.selected {
+            background-color: rgba(39, 201, 63, 0.3);
+        }
+
+        .command-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .prompt {
+            color: #27c93f;
+            margin-right: 10px;
+        }
+
+        .command {
+            color: #fff;
+            opacity: 0;
+            animation: typing 1s steps(10) forwards;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: #fff;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        .execution-output {
+            margin-top: 20px;
+            color: #aaa;
+            opacity: 0;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            opacity: 0;
+        }
+
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            margin: 0 5px;
+            opacity: 0;
+        }
+
+        .happiness-indicator {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+        }
+
+        .happiness-level {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .happiness-face {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            font-size: 20px;
+            color: #27c93f;
+            margin-top: 20px;
+            opacity: 0;
+        }
+
+        @keyframes typing {
+            from { width: 0; opacity: 1; }
+            to { width: 100%; opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes loadingAnimation {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: #fff;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .lyrics {
+            position: absolute;
+            bottom: 50px;
+            text-align: center;
+            width: 100%;
+            font-size: 24px;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-button red"></div>
+                <div class="terminal-button yellow"></div>
+                <div class="terminal-button green"></div>
+            </div>
+            <div class="terminal-body">
+                <div class="command-line">
+                    <span class="prompt">$</span>
+                    <span class="command" id="command">select action</span>
+                    <span class="cursor"></span>
+                </div>
+                <div class="options-container" id="options-container">
+                    <div class="option" id="option1">1. make sad</div>
+                    <div class="option" id="option2">2. make angry</div>
+                    <div class="option" id="option3">3. make happy</div>
+                    <div class="option" id="option4">4. make confused</div>
+                </div>
+                <div class="execution-output" id="execution-output">
+                    <p>Executing happiness protocol...</p>
+                    <p>Initializing joy matrix...</p>
+                    <p>Activating pleasure centers...</p>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                </div>
+                <div class="happiness-indicator" id="happiness-indicator">
+                    <div class="happiness-level">Happiness Level: <span id="happiness-value">0%</span></div>
+                    <div class="happiness-face" id="happiness-face">😐</div>
+                </div>
+                <div class="success-message" id="success-message">
+                    ✓ EXECUTION SUCCESSFUL
+                </div>
+            </div>
+        </div>
+        
+        <div class="particles" id="particles"></div>
+        
+        <div class="lyrics" id="lyrics">
+            If I can make you happy / I will run the EXECUTION
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const command = document.getElementById('command');
+            const optionsContainer = document.getElementById('options-container');
+            const options = document.querySelectorAll('.option');
+            const executionOutput = document.getElementById('execution-output');
+            const loading = document.getElementById('loading');
+            const loadingDots = document.querySelectorAll('.loading-dot');
+            const happinessIndicator = document.getElementById('happiness-indicator');
+            const happinessValue = document.getElementById('happiness-value');
+            const happinessFace = document.getElementById('happiness-face');
+            const successMessage = document.getElementById('success-message');
+            const lyrics = document.getElementById('lyrics');
+            const particlesContainer = document.getElementById('particles');
+            
+            // 创建粒子
+            const particles = [];
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particlesContainer.appendChild(particle);
+                
+                particles.push({
+                    element: particle,
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    size: Math.random() * 3 + 1,
+                    speedX: (Math.random() - 0.5) * 2,
+                    speedY: (Math.random() - 0.5) * 2,
+                    opacity: Math.random() * 0.5 + 0.3
+                });
+            }
+            
+            // 初始化粒子
+            particles.forEach(particle => {
+                particle.element.style.opacity = '0';
+                particle.element.style.transition = 'opacity 0.125s ease-in-out';
+            });
+            
+            function typeCommand() {
+                let charIndex = 0;
+                const commandText = "select action";
+                
+                // 清空命令行
+                command.textContent = "";
+                
+                // 逐字显示命令
+                const typingInterval = setInterval(() => {
+                    if (charIndex < commandText.length) {
+                        command.textContent += commandText[charIndex];
+                        charIndex++;
+                    } else {
+                        clearInterval(typingInterval);
+                        
+                        // 显示选项
+                        setTimeout(() => {
+                            optionsContainer.style.opacity = '1';
+                            optionsContainer.style.animation = 'fadeIn 0.125s forwards';
+                            
+                            // 添加选项交互效果
+                            options.forEach(option => {
+                                option.addEventListener('mouseenter', function() {
+                                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                                });
+                                
+                                option.addEventListener('mouseleave', function() {
+                                    if (!this.classList.contains('selected')) {
+                                        this.style.backgroundColor = 'transparent';
+                                    }
+                                });
+                            });
+                            
+                            // 模拟选择"make angry"选项
+                            setTimeout(() => {
+                                selectOption(2); // 选择第2个选项 "make angry"
+                            }, 250);
+                        }, 125);
+                    }
+                }, 25); // 加快打字速度
+            }
+            
+            // 动画时间线
+            setTimeout(() => {
+                typeCommand();
+            }, 125);
+            
+            function selectOption(optionIndex) {
+                const selectedOption = options[optionIndex - 1];
+                selectedOption.classList.add('selected');
+                selectedOption.style.backgroundColor = 'rgba(39, 201, 63, 0.3)';
+                
+                // 更新命令行显示
+                  setTimeout(() => {
+                      command.textContent = `make angry`;
+                      command.style.animation = 'none';
+                      command.offsetHeight; // 触发重排
+                      command.style.animation = 'fadeIn 0.125s forwards';
+                      
+                      // 隐藏选项
+                      optionsContainer.style.opacity = '0';
+                      optionsContainer.style.animation = 'fadeOut 0.125s forwards';
+                      
+                      // 继续执行流程
+                      continueExecution();
+                  }, 250);
+            }
+            
+            function continueExecution() {
+                setTimeout(() => {
+                    // 显示执行输出
+                    executionOutput.style.opacity = '1';
+                    executionOutput.style.animation = 'fadeIn 0.125s forwards';
+                }, 125);
+                
+                setTimeout(() => {
+                    // 显示加载动画
+                    loading.style.opacity = '1';
+                    loading.style.animation = 'fadeIn 0.125s forwards';
+                    
+                    // 加载点动画
+                    loadingDots.forEach((dot, index) => {
+                        setTimeout(() => {
+                            dot.style.animation = `loadingAnimation 0.375s infinite ${index * 0.05}s`;
+                        }, 25);
+                    });
+                }, 375);
+                
+                setTimeout(() => {
+                    // 显示快乐指标
+                    happinessIndicator.style.opacity = '1';
+                    happinessIndicator.style.animation = 'fadeIn 0.125s forwards';
+                    
+                    // 更新快乐值
+                    let happinessLevel = 0;
+                    const happinessInterval = setInterval(() => {
+                        happinessLevel += 20; // 再加快快乐值增长速度
+                        happinessValue.textContent = `${happinessLevel}%`;
+                        
+                        // 更新表情
+                        if (happinessLevel < 20) {
+                            happinessFace.textContent = '😐';
+                        } else if (happinessLevel < 40) {
+                            happinessFace.textContent = '🙂';
+                        } else if (happinessLevel < 60) {
+                            happinessFace.textContent = '😊';
+                        } else if (happinessLevel < 80) {
+                            happinessFace.textContent = '😄';
+                        } else {
+                            happinessFace.textContent = '🤩';
+                        }
+                        
+                        // 激活粒子
+                        if (happinessLevel > 50) {
+                            particles.forEach(particle => {
+                                particle.element.style.opacity = particle.opacity;
+                            });
+                        }
+                        
+                        if (happinessLevel >= 100) {
+                            clearInterval(happinessInterval);
+                            
+                            // 显示成功消息
+                            setTimeout(() => {
+                                successMessage.style.opacity = '1';
+                                successMessage.style.animation = 'fadeIn 0.125s forwards';
+                            }, 125);
+                            
+                            // 显示歌词
+                            setTimeout(() => {
+                                lyrics.style.opacity = '1';
+                                lyrics.style.animation = 'fadeIn 0.25s forwards';
+                            }, 250);
+                        }
+                    }, 12.5); // 再加快更新频率
+                }, 625);
+            }
+            
+            // 粒子动画
+            function animateParticles() {
+                particles.forEach(particle => {
+                    particle.x += particle.speedX;
+                    particle.y += particle.speedY;
+                    
+                    // 边界检查
+                    if (particle.x < 0 || particle.x > window.innerWidth) {
+                        particle.speedX *= -1;
+                    }
+                    if (particle.y < 0 || particle.y > window.innerHeight) {
+                        particle.speedY *= -1;
+                    }
+                    
+                    // 更新位置
+                    particle.element.style.left = `${particle.x}px`;
+                    particle.element.style.top = `${particle.y}px`;
+                    particle.element.style.width = `${particle.size}px`;
+                    particle.element.style.height = `${particle.size}px`;
+                });
+                
+                requestAnimationFrame(animateParticles);
+            }
+            
+            // 开始粒子动画
+            animateParticles();
+        });
+    </script>
+</body>
+</html>
