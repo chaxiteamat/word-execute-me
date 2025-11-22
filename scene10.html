@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Switch my current / To AC to DC</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #canvas {
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .title {
+            position: absolute;
+            top: 10%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            position: absolute;
+            top: 15%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #ddd;
+            font-size: 1.6rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            z-index: 10;
+            letter-spacing: 1px;
+        }
+        
+        .formula-container {
+            position: absolute;
+            bottom: 15%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.8rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            z-index: 10;
+        }
+        
+        .formula {
+            display: inline-block;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        .current-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .switch-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+        }
+        
+        .switch {
+            width: 100px;
+            height: 50px;
+            background: #333;
+            border-radius: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .switch-handle {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            transition: transform 0.5s;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .switch.active .switch-handle {
+            transform: translateX(50px);
+        }
+        
+        .switch.active {
+            background: #555;
+        }
+        
+        .switch-label {
+            position: absolute;
+            top: -30px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .switch-label.active {
+            opacity: 1;
+        }
+        
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            padding: 12px 24px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="title">Switch my current</div>
+    <div class="subtitle">To AC to DC</div>
+    
+    <div class="formula-container">
+        <div class="formula">AC: V(t) = V₀sin(ωt) → DC: V(t) = V₀</div>
+    </div>
+    
+    <div class="current-display">
+        <div>当前类型: <span id="currentType">AC</span></div>
+        <div>电压: <span id="voltageValue">0</span>V</div>
+        <div>频率: <span id="frequencyValue">50</span>Hz</div>
+    </div>
+    
+    <div class="switch-container">
+        <div class="switch-label" id="acLabel">AC</div>
+        <div class="switch-label" id="dcLabel">DC</div>
+        <div class="switch" id="currentSwitch">
+            <div class="switch-handle"></div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" onclick="location.href='scene9.html'">Previous</button>
+        <button class="nav-button" onclick="location.href='scene10-5.html'">Next</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const titleElement = document.querySelector('.title');
+        const subtitleElement = document.querySelector('.subtitle');
+        const formulaElement = document.querySelector('.formula-container');
+        
+        // 电流显示元素
+        const currentTypeElement = document.getElementById('currentType');
+        const voltageValueElement = document.getElementById('voltageValue');
+        const frequencyValueElement = document.getElementById('frequencyValue');
+        
+        // 开关元素
+        const switchElement = document.getElementById('currentSwitch');
+        const acLabelElement = document.getElementById('acLabel');
+        const dcLabelElement = document.getElementById('dcLabel');
+        
+        // 设置画布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画参数
+        let animationProgress = 0;
+        const animationDuration = 2500; // 2.5秒动画
+        let startTime = null;
+        
+        // 电流参数
+        let currentType = 'AC'; // AC 或 DC
+        let voltage = 0;
+        let time = 0;
+        let switchTime = 0.5; // 在动画50%时切换
+        let hasSwitched = false;
+        
+        // 波形参数
+        const waveAmplitude = 100;
+        const waveFrequency = 0.05;
+        const dcVoltage = 50;
+        
+        // 开关点击事件
+        switchElement.addEventListener('click', function() {
+            if (!hasSwitched) {
+                hasSwitched = true;
+                currentType = currentType === 'AC' ? 'DC' : 'AC';
+                switchElement.classList.toggle('active');
+                
+                // 更新标签显示
+                if (currentType === 'AC') {
+                    acLabelElement.classList.add('active');
+                    dcLabelElement.classList.remove('active');
+                } else {
+                    acLabelElement.classList.remove('active');
+                    dcLabelElement.classList.add('active');
+                }
+                
+                currentTypeElement.textContent = currentType;
+                frequencyValueElement.textContent = currentType === 'AC' ? '50' : '0';
+            }
+        });
+        
+        // 绘制AC波形
+        function drawACWave(progress) {
+            // 只在切换到DC之前绘制AC波形
+            if (progress >= switchTime) return;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const centerY = canvas.height / 2;
+            const startX = canvas.width * 0.1;
+            const endX = canvas.width * 0.9;
+            const waveLength = endX - startX;
+            
+            for (let x = 0; x <= waveLength; x++) {
+                const angle = (x / waveLength) * Math.PI * 4 * progress / switchTime; // 调整进度比例
+                const y = centerY + Math.sin(angle) * waveAmplitude;
+                
+                if (x === 0) {
+                    ctx.moveTo(startX + x, y);
+                } else {
+                    ctx.lineTo(startX + x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(startX, centerY);
+            ctx.lineTo(endX, centerY);
+            ctx.stroke();
+            
+            // 绘制AC标签
+            if (progress > 0.2) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = '16px Courier New';
+                ctx.fillText('AC', startX - 30, centerY - waveAmplitude - 10);
+            }
+        }
+        
+        // 绘制DC波形
+        function drawDCWave(progress) {
+            ctx.strokeStyle = 'rgba(150, 150, 150, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const centerY = canvas.height / 2;
+            const startX = canvas.width * 0.1;
+            const endX = canvas.width * 0.9;
+            const waveLength = endX - startX;
+            const dcY = centerY - dcVoltage;
+            
+            const drawLength = waveLength * Math.max(0, (progress - switchTime) / (1 - switchTime));
+            
+            ctx.moveTo(startX, dcY);
+            ctx.lineTo(startX + drawLength, dcY);
+            ctx.stroke();
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(startX, centerY);
+            ctx.lineTo(endX, centerY);
+            ctx.stroke();
+            
+            // 绘制DC标签
+            if (progress > 0.7) {
+                ctx.fillStyle = 'rgba(150, 150, 150, 0.8)';
+                ctx.font = '16px Courier New';
+                ctx.fillText('DC', startX - 30, dcY - 10);
+            }
+        }
+        
+        // 绘制切换动画
+        function drawSwitchAnimation(progress) {
+            const switchProgress = Math.min(1, Math.max(0, (progress - switchTime + 0.1) / 0.2));
+            
+            if (switchProgress > 0 && switchProgress < 1) {
+                // 绘制切换效果
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = 50 + switchProgress * 100;
+                
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * (1 - switchProgress)})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // 绘制闪电效果
+                if (switchProgress > 0.5) {
+                    ctx.strokeStyle = `rgba(255, 255, 100, ${0.8 * (1 - switchProgress)})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    
+                    const startX = centerX - 30;
+                    const startY = centerY - 50;
+                    const endX = centerX + 30;
+                    const endY = centerY + 50;
+                    
+                    // 简单的闪电形状
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(startX + 10, startY + 20);
+                    ctx.lineTo(startX - 5, startY + 25);
+                    ctx.lineTo(startX + 15, startY + 50);
+                    ctx.lineTo(endX, endY);
+                    
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // 更新电流值
+        function updateCurrentValues(progress) {
+            if (currentType === 'AC') {
+                voltage = Math.sin(time * waveFrequency) * waveAmplitude;
+            } else {
+                voltage = dcVoltage;
+            }
+            
+            voltageValueElement.textContent = Math.abs(voltage).toFixed(1);
+            time += 0.1;
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            animationProgress = Math.min(elapsed / animationDuration, 1);
+            
+            // 清空画布
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // 完全清除，不使用透明度
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制波形
+            drawACWave(animationProgress);
+            
+            // 在动画50%时自动切换到DC
+            if (animationProgress >= switchTime && !hasSwitched) {
+                hasSwitched = true;
+                currentType = 'DC';
+                switchElement.classList.add('active');
+                acLabelElement.classList.remove('active');
+                dcLabelElement.classList.add('active');
+                currentTypeElement.textContent = 'DC';
+                frequencyValueElement.textContent = '0';
+            }
+            
+            drawDCWave(animationProgress);
+            drawSwitchAnimation(animationProgress);
+            updateCurrentValues(animationProgress);
+            
+            // 控制文本显示
+            if (animationProgress >= 0.02 && animationProgress <= 0.04) {
+                titleElement.style.opacity = (animationProgress - 0.02) / 0.02;
+            } else if (animationProgress > 0.04) {
+                titleElement.style.opacity = 1;
+            }
+            
+            if (animationProgress >= 0.03 && animationProgress <= 0.05) {
+                subtitleElement.style.opacity = (animationProgress - 0.03) / 0.02;
+            } else if (animationProgress > 0.05) {
+                subtitleElement.style.opacity = 1;
+            }
+            
+            if (animationProgress >= 0.04 && animationProgress <= 0.06) {
+                formulaElement.style.opacity = (animationProgress - 0.04) / 0.02;
+            } else if (animationProgress > 0.06) {
+                formulaElement.style.opacity = 1;
+            }
+            
+            // 继续动画
+            if (animationProgress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        // 初始化AC标签显示
+        acLabelElement.classList.add('active');
+        
+        // 启动动画
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
