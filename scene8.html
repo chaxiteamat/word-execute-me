@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Execute Me - Scene 8</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #title {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            letter-spacing: 3px;
+        }
+        
+        #subtitle {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            letter-spacing: 3px;
+            z-index: 10;
+            max-width: 80%;
+        }
+        
+        .nav-button {
+            position: absolute;
+            bottom: 30px;
+            padding: 12px 24px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid white;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 10;
+        }
+        
+        #prev-scene {
+            left: 30px;
+        }
+        
+        #next-scene {
+            right: 30px;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="title">If I'm a sine wave</div>
+    <div id="subtitle">Then you can sit on all my TANGENTS</div>
+    <a href="scene7.html" id="prev-scene" class="nav-button">← Previous Scene</a>
+    <a href="scene9.html" id="next-scene" class="nav-button">Next Scene →</a>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const titleElement = document.getElementById('title');
+        const subtitleElement = document.getElementById('subtitle');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画参数
+        let animationTime = 0;
+        const animationDuration = 3000; // 3秒动画时长，匹配歌词时间戳 [00:37.00] 到 [00:40.00]
+        let startTime = null;
+        
+        // 正弦波参数
+        const sineWave = {
+            amplitude: 100,  // 振幅
+            frequency: 0.02, // 频率
+            phase: 0,        // 相位
+            centerY: 0,      // Y轴中心位置
+            points: []       // 存储正弦波上的点
+        };
+        
+        // 切线参数
+        const tangent = {
+            length: 150,     // 切线长度
+            position: 0,     // 切线在正弦波上的位置（0-1）
+            slope: 0,        // 切线斜率
+            pointX: 0,       // 切点X坐标
+            pointY: 0        // 切点Y坐标
+        };
+        
+        // 绘制坐标系网格
+        function drawGrid() {
+            const gridSize = 40;
+            ctx.strokeStyle = 'rgba(50, 50, 50, 0.5)';
+            ctx.lineWidth = 1;
+            
+            // 绘制垂直线
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // 绘制水平线
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = 'rgba(100, 100, 100, 0.8)';
+            ctx.lineWidth = 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+        }
+        
+        // 计算正弦波上的点
+        function calculateSineWavePoints(progress) {
+            sineWave.points = [];
+            sineWave.centerY = canvas.height / 2;
+            
+            const visiblePoints = Math.floor(canvas.width * progress);
+            
+            for (let x = 0; x <= visiblePoints; x++) {
+                const y = sineWave.centerY + sineWave.amplitude * Math.sin(sineWave.frequency * x + sineWave.phase);
+                sineWave.points.push({ x, y });
+            }
+        }
+        
+        // 绘制正弦波
+        function drawSineWave(progress) {
+            if (sineWave.points.length < 2) return;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            sineWave.points.forEach((point, index) => {
+                if (index === 0) {
+                    ctx.moveTo(point.x, point.y);
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+        
+        // 计算切线参数
+        function calculateTangent(progress) {
+            // 切线位置沿正弦波移动
+            tangent.position = progress;
+            
+            // 计算切点在正弦波上的位置
+            const waveX = Math.floor(canvas.width * tangent.position);
+            
+            // 计算切点坐标
+            tangent.pointX = waveX;
+            tangent.pointY = sineWave.centerY + sineWave.amplitude * Math.sin(sineWave.frequency * waveX + sineWave.phase);
+            
+            // 计算切线斜率（正弦函数的导数是余弦函数）
+            tangent.slope = sineWave.amplitude * sineWave.frequency * Math.cos(sineWave.frequency * waveX + sineWave.phase);
+        }
+        
+        // 绘制切线
+        function drawTangent(progress) {
+            if (progress < 0.3) return; // 在动画30%后才开始显示切线
+            
+            const tangentOpacity = Math.min(1, (progress - 0.3) / 0.2);
+            
+            // 计算切线的起点和终点
+            const angle = Math.atan(tangent.slope);
+            const dx = Math.cos(angle) * tangent.length / 2;
+            const dy = Math.sin(angle) * tangent.length / 2;
+            
+            const startX = tangent.pointX - dx;
+            const startY = tangent.pointY - dy;
+            const endX = tangent.pointX + dx;
+            const endY = tangent.pointY + dy;
+            
+            // 绘制切线
+            ctx.strokeStyle = `rgba(150, 150, 150, ${tangentOpacity})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            
+            // 绘制切点（高亮显示）
+            ctx.fillStyle = `rgba(255, 255, 100, ${tangentOpacity})`;
+            ctx.beginPath();
+            ctx.arc(tangent.pointX, tangent.pointY, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制切点光晕效果
+            const gradient = ctx.createRadialGradient(tangent.pointX, tangent.pointY, 0, tangent.pointX, tangent.pointY, 20);
+            gradient.addColorStop(0, `rgba(255, 255, 100, ${tangentOpacity * 0.8})`);
+            gradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(tangent.pointX, tangent.pointY, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // 渲染函数
+        function render(timestamp) {
+            if (!startTime) startTime = timestamp;
+            animationTime = timestamp - startTime;
+            
+            // 计算动画进度
+            const progress = Math.min(animationTime / animationDuration, 1);
+            
+            // 清空画布
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制坐标系网格
+            drawGrid();
+            
+            // 计算正弦波上的点
+            calculateSineWavePoints(progress);
+            
+            // 绘制正弦波
+            drawSineWave(progress);
+            
+            // 计算切线参数
+            calculateTangent(progress);
+            
+            // 绘制切线
+            drawTangent(progress);
+            
+            // 更新标题透明度
+            if (progress < 0.4) {
+                titleElement.style.opacity = Math.min(1, progress * 2.5);
+                subtitleElement.style.opacity = 0;
+            } else {
+                titleElement.style.opacity = Math.max(0, 2 - progress * 2.5);
+                subtitleElement.style.opacity = Math.min(1, (progress - 0.4) * 2.5);
+            }
+            
+            // 继续动画
+            if (progress < 1) {
+                requestAnimationFrame(render);
+            } else {
+                // 动画结束后继续循环
+                startTime = null;
+                requestAnimationFrame(render);
+            }
+        }
+        
+        // 启动动画
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>
