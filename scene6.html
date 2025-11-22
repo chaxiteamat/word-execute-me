@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Execute Me - Scene 6</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #title {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            letter-spacing: 3px;
+        }
+        
+        #subtitle {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            letter-spacing: 3px;
+            z-index: 10;
+            max-width: 80%;
+        }
+        
+        #dimension-indicator {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            letter-spacing: 5px;
+            font-family: 'Courier New', monospace;
+            z-index: 10;
+            padding: 5px 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+        }
+        
+        .nav-button {
+            position: absolute;
+            bottom: 30px;
+            padding: 12px 24px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid white;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 10;
+        }
+        
+        #prev-scene {
+            left: 30px;
+        }
+        
+        #next-scene {
+            right: 30px;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="title">If I'm a set of points</div>
+    <div id="subtitle">Then I will give you my DIMENSION</div>
+    <div id="dimension-indicator">1D</div>
+    <a href="scene5.html" id="prev-scene" class="nav-button">← Previous Scene</a>
+    <a href="scene7.html" id="next-scene" class="nav-button">Next Scene →</a>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const titleElement = document.getElementById('title');
+        const subtitleElement = document.getElementById('subtitle');
+        const dimensionIndicator = document.getElementById('dimension-indicator');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画参数
+        let animationTime = 0;
+        const animationDuration = 4000; // 4秒动画时长，匹配两句歌词
+        let startTime = null;
+        
+        // 坐标轴系统
+        const axes = {
+            x: { length: 400, color: 'rgba(128, 128, 128, 0.8)', label: 'X' },
+            y: { length: 300, color: 'rgba(128, 128, 128, 0.8)', label: 'Y' },
+            z: { length: 300, color: 'rgba(128, 128, 128, 0.8)', label: 'Z' },
+            t: { color: 'rgba(128, 128, 128, 0.8)', label: 'T' }
+        };
+        
+        // 维度变换状态
+        let dimensionState = 1; // 1D, 2D, 3D, 4D
+        let transitionProgress = 0;
+        
+        // 3D到2D投影
+        function project3D(x, y, z) {
+            // 简单的透视投影
+            const distance = 800;
+            const scale = distance / (distance + z);
+            const x2d = x * scale + canvas.width / 2;
+            const y2d = y * scale + canvas.height / 2;
+            
+            return { x: x2d, y: y2d, scale: scale };
+        }
+        
+        // 绘制坐标轴
+        function drawAxes() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // X轴（始终显示）
+            ctx.strokeStyle = axes.x.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX - axes.x.length, centerY);
+            ctx.lineTo(centerX + axes.x.length, centerY);
+            ctx.stroke();
+            
+            // X轴标签
+            ctx.fillStyle = axes.x.color;
+            ctx.font = 'bold 16px Courier New';
+            ctx.fillText(axes.x.label, centerX + axes.x.length + 10, centerY + 5);
+            
+            // Y轴（2D及以上显示）
+            if (dimensionState >= 2) {
+                const opacity = dimensionState === 2 ? 1 : transitionProgress;
+                ctx.strokeStyle = `rgba(128, 128, 128, ${0.8 * opacity})`;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - axes.y.length);
+                ctx.lineTo(centerX, centerY + axes.y.length);
+                ctx.stroke();
+                
+                // Y轴标签
+                ctx.fillStyle = `rgba(128, 128, 128, ${0.8 * opacity})`;
+                ctx.fillText(axes.y.label, centerX + 5, centerY - axes.y.length - 10);
+            }
+            
+            // Z轴（3D及以上显示）
+            if (dimensionState >= 3) {
+                const opacity = dimensionState === 3 ? 1 : transitionProgress;
+                
+                // Z轴斜向表示
+                ctx.strokeStyle = `rgba(128, 128, 128, ${0.8 * opacity})`;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX - axes.z.length * 0.7, centerY - axes.z.length * 0.7);
+                ctx.stroke();
+                
+                // Z轴标签
+                ctx.fillStyle = `rgba(128, 128, 128, ${0.8 * opacity})`;
+                ctx.fillText(axes.z.label, centerX - axes.z.length * 0.7 - 20, centerY - axes.z.length * 0.7 - 10);
+            }
+            
+            // 时间轴（4D显示）
+            if (dimensionState === 4) {
+                // 绘制时间轴（用动画表示）
+                const timeOpacity = transitionProgress;
+                ctx.strokeStyle = `rgba(128, 128, 128, ${0.8 * timeOpacity})`;
+                ctx.beginPath();
+                
+                // 时间轴用波浪线表示，调整位置避免与UI元素重叠
+                const waveLength = 50;
+                const waveHeight = 20;
+                const startX = centerX - axes.x.length;
+                const endX = centerX + axes.x.length;
+                const waveY = centerY + axes.y.length + 120; // 进一步向下移动，避免与UI元素重叠
+                
+                for (let x = startX; x <= endX; x += 5) {
+                    const y = waveY + Math.sin((x - startX) / waveLength * Math.PI * 2) * waveHeight;
+                    if (x === startX) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+                
+                // 时间轴标签
+                ctx.fillStyle = `rgba(128, 128, 128, ${0.8 * timeOpacity})`;
+                ctx.fillText(axes.t.label, centerX + axes.x.length + 10, waveY);
+            }
+        }
+        
+        // 绘制1D表示（点）
+        function draw1D() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // 绘制点
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 添加发光效果
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'white';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+        
+        // 绘制2D表示（线）
+        function draw2D() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // 绘制多条线形成网格
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            
+            // 横线
+            for (let y = -100; y <= 100; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(centerX - 200, centerY + y);
+                ctx.lineTo(centerX + 200, centerY + y);
+                ctx.stroke();
+            }
+            
+            // 竖线
+            for (let x = -200; x <= 200; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(centerX + x, centerY - 100);
+                ctx.lineTo(centerX + x, centerY + 100);
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制3D表示（面）
+        function draw3D() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // 绘制立方体的面
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            
+            // 前面
+            ctx.strokeRect(centerX - 100, centerY - 100, 200, 200);
+            
+            // 后面
+            ctx.strokeRect(centerX - 150, centerY - 150, 200, 200);
+            
+            // 连接线
+            ctx.beginPath();
+            ctx.moveTo(centerX - 100, centerY - 100);
+            ctx.lineTo(centerX - 150, centerY - 150);
+            ctx.moveTo(centerX + 100, centerY - 100);
+            ctx.lineTo(centerX + 50, centerY - 150);
+            ctx.moveTo(centerX + 100, centerY + 100);
+            ctx.lineTo(centerX + 50, centerY + 50);
+            ctx.moveTo(centerX - 100, centerY + 100);
+            ctx.lineTo(centerX - 150, centerY + 50);
+            ctx.stroke();
+        }
+        
+        // 绘制4D表示（3D+时间）
+        function draw4D() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // 绘制多个立方体表示时间维度
+            const timeOffset = Math.sin(animationTime / 500) * 50;
+            
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            
+            // 绘制多个立方体表示时间流逝
+            for (let t = -2; t <= 2; t++) {
+                const opacity = 1 - Math.abs(t) / 3;
+                const offset = t * 30;
+                
+                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                
+                // 立方体
+                const x = centerX + offset;
+                const y = centerY + timeOffset * Math.abs(t) / 2;
+                const size = 100 - Math.abs(t) * 10;
+                
+                // 前面
+                ctx.strokeRect(x - size/2, y - size/2, size, size);
+                
+                // 后面
+                ctx.strokeRect(x - size/2 - 20, y - size/2 - 20, size, size);
+                
+                // 连接线
+                ctx.beginPath();
+                ctx.moveTo(x - size/2, y - size/2);
+                ctx.lineTo(x - size/2 - 20, y - size/2 - 20);
+                ctx.moveTo(x + size/2, y - size/2);
+                ctx.lineTo(x + size/2 - 20, y - size/2 - 20);
+                ctx.moveTo(x + size/2, y + size/2);
+                ctx.lineTo(x + size/2 - 20, y + size/2 - 20);
+                ctx.moveTo(x - size/2, y + size/2);
+                ctx.lineTo(x - size/2 - 20, y + size/2 - 20);
+                ctx.stroke();
+            }
+        }
+        
+        // 更新维度状态
+        function updateDimensionState(progress) {
+            // 将4秒动画分为4个阶段，每个阶段1秒
+            const stage = Math.floor(progress * 4);
+            
+            if (stage < 1) {
+                // 第一阶段：1D（点）
+                dimensionState = 1;
+                transitionProgress = progress * 4;
+            } else if (stage < 2) {
+                // 第二阶段：2D（线）
+                dimensionState = 2;
+                transitionProgress = (progress - 0.25) * 4;
+            } else if (stage < 3) {
+                // 第三阶段：3D（面）
+                dimensionState = 3;
+                transitionProgress = (progress - 0.5) * 4;
+            } else {
+                // 第四阶段：4D（3D+时间）
+                dimensionState = 4;
+                transitionProgress = (progress - 0.75) * 4;
+            }
+            
+            // 更新维度指示器
+            dimensionIndicator.textContent = `${dimensionState}D`;
+            
+            // 更新字幕显示
+            if (progress < 0.5) {
+                titleElement.style.opacity = Math.min(1, progress * 2);
+                subtitleElement.style.opacity = 0;
+            } else {
+                titleElement.style.opacity = Math.max(0, 2 - progress * 2);
+                subtitleElement.style.opacity = Math.min(1, (progress - 0.5) * 2);
+            }
+        }
+        
+        // 渲染函数
+        function render() {
+            // 清空画布
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制坐标轴
+            drawAxes();
+            
+            // 根据当前维度状态绘制相应表示
+            switch (dimensionState) {
+                case 1:
+                    draw1D();
+                    break;
+                case 2:
+                    draw2D();
+                    break;
+                case 3:
+                    draw3D();
+                    break;
+                case 4:
+                    draw4D();
+                    break;
+            }
+            
+            // 更新维度指示器透明度
+            dimensionIndicator.style.opacity = Math.min(1, animationTime / 500);
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            animationTime = timestamp - startTime;
+            
+            // 计算动画进度
+            const progress = Math.min(1, animationTime / animationDuration);
+            
+            // 更新维度状态
+            updateDimensionState(progress);
+            
+            // 渲染场景
+            render();
+            
+            // 继续动画循环
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // 动画结束后，继续循环
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        // 启动场景
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
