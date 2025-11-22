@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXECUTION / 死刑</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Orbitron', monospace;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .execution-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .execution-command {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #ff3366;
+            text-shadow: 0 0 20px rgba(255, 51, 102, 0.8);
+            opacity: 0;
+            transform: scale(0.5);
+            animation: commandAppear 1.5s 0.5s forwards;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        .death-symbol {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+            animation: symbolAppear 1.5s 2s forwards;
+            margin-bottom: 3rem;
+        }
+        
+        .skull {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            clip-path: path('M100,30 C130,30 150,50 150,80 C150,100 140,110 130,120 L130,140 C130,150 120,160 110,160 L90,160 C80,160 70,150 70,140 L70,120 C60,110 50,100 50,80 C50,50 70,30 100,30 Z');
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+        }
+        
+        .skull::before, .skull::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #000;
+            border-radius: 50%;
+            top: 60px;
+        }
+        
+        .skull::before {
+            left: 60px;
+        }
+        
+        .skull::after {
+            right: 60px;
+        }
+        
+        .crossbones {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            animation: bonesAppear 1s 3.5s forwards;
+        }
+        
+        .bone {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            height: 15px;
+            border-radius: 10px;
+        }
+        
+        .bone-1 {
+            width: 150px;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+        }
+        
+        .bone-2 {
+            width: 150px;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-45deg);
+        }
+        
+        .life-fading {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(0,0,0,0.8) 100%);
+            opacity: 0;
+            animation: fadeOut 2s 4s forwards;
+            pointer-events: none;
+        }
+        
+        .final-black {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            opacity: 0;
+            animation: finalBlack 1s 5s forwards;
+            z-index: 100;
+        }
+        
+        .chinese-text {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ff3366;
+            text-shadow: 0 0 20px rgba(255, 51, 102, 0.8);
+            opacity: 0;
+            transform: scale(0.5);
+            animation: commandAppear 1.5s 1s forwards;
+            margin-bottom: 2rem;
+        }
+        
+        @keyframes commandAppear {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes symbolAppear {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes bonesAppear {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes finalBlack {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="execution-container">
+            <div class="execution-command">EXECUTION</div>
+            <div class="chinese-text">死刑</div>
+            
+            <div class="death-symbol">
+                <div class="skull"></div>
+                <div class="crossbones">
+                    <div class="bone bone-1"></div>
+                    <div class="bone bone-2"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="life-fading"></div>
+        <div class="final-black"></div>
+    </div>
+</body>
+</html>
