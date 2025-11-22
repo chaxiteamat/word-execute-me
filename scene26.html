@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 26: Then maybe / Then maybe you won't leave me so DISHEARTENED</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            overflow: hidden;
+        }
+
+        .lyrics-container {
+            position: absolute;
+            top: 10%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .lyrics-line {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .heart-container {
+            position: relative;
+            width: 80%;
+            height: 60%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .heart {
+            position: relative;
+            width: 300px;
+            height: 270px;
+            transform-style: preserve-3d;
+            transition: transform 1s ease;
+            filter: drop-shadow(0 0 20px rgba(233, 69, 96, 0.7));
+        }
+
+        .heart-shape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e94560;
+            opacity: 0;
+            clip-path: path('M150,60 C100,0 0,30 0,120 C0,200 150,270 150,270 C150,270 300,200 300,120 C300,30 200,0 150,60 Z');
+            transform-origin: center;
+        }
+
+        .heart-shape.beating {
+            animation: heartBeat 1s infinite;
+        }
+
+        .heart-shape.cracked {
+            animation: crack 1s forwards;
+        }
+
+        .heart-shape.falling {
+            animation: fall 2s forwards;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes crack {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fall {
+            0% {
+                opacity: 0.6;
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(400px) rotate(360deg) scale(0.5);
+            }
+        }
+
+        .crack-line {
+            position: absolute;
+            background-color: #0a0a0a;
+            opacity: 0;
+            transform-origin: center;
+            z-index: 2;
+        }
+
+        .crack-line.horizontal {
+            width: 80%;
+            height: 6px;
+            top: 50%;
+            left: 10%;
+        }
+
+        .crack-line.diagonal1 {
+            width: 6px;
+            height: 70%;
+            top: 15%;
+            left: 30%;
+            transform: rotate(30deg);
+        }
+
+        .crack-line.diagonal2 {
+            width: 6px;
+            height: 70%;
+            top: 15%;
+            right: 30%;
+            transform: rotate(-30deg);
+        }
+
+        .crack-line.visible {
+            animation: crackAppear 1s forwards;
+        }
+
+        @keyframes crackAppear {
+            0% {
+                opacity: 0;
+                transform: var(--transform) scale(0, 1);
+            }
+            100% {
+                opacity: 1;
+                transform: var(--transform) scale(1, 1);
+            }
+        }
+
+        .heart-piece {
+            position: absolute;
+            background-color: #e94560;
+            opacity: 0;
+            filter: drop-shadow(0 0 10px rgba(233, 69, 96, 0.5));
+            z-index: 1;
+        }
+
+        .heart-piece.left {
+            width: 150px;
+            height: 270px;
+            clip-path: path('M150,60 C100,0 0,30 0,120 C0,200 75,235 150,270 Z');
+            top: 0;
+            left: 0;
+        }
+
+        .heart-piece.right {
+            width: 150px;
+            height: 270px;
+            clip-path: path('M0,60 C50,0 150,30 150,120 C150,200 75,235 0,270 Z');
+            top: 0;
+            right: 0;
+        }
+
+        .heart-piece.falling-left {
+            animation: fallLeft 2s forwards;
+        }
+
+        .heart-piece.falling-right {
+            animation: fallRight 2s forwards;
+        }
+
+        @keyframes fallLeft {
+            0% {
+                opacity: 0.6;
+                transform: translateY(0) rotate(-15deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(400px) rotate(-45deg) scale(0.5);
+            }
+        }
+
+        @keyframes fallRight {
+            0% {
+                opacity: 0.6;
+                transform: translateY(0) rotate(15deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(400px) rotate(45deg) scale(0.5);
+            }
+        }
+
+        .heart-rate-monitor {
+            position: absolute;
+            bottom: 15%;
+            width: 70%;
+            height: 120px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(78, 205, 196, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .monitor-screen {
+            flex: 1;
+            background-color: #000;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ecg-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #4ecdc4;
+            transform: translateY(-50%);
+            opacity: 0.3;
+        }
+
+        .ecg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .heart-rate-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            color: #4ecdc4;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .completion-text {
+            position: absolute;
+            bottom: 5%;
+            font-size: 1.8rem;
+            font-weight: bold;
+            opacity: 0;
+            text-align: center;
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .fragment {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #e94560;
+            opacity: 0;
+            border-radius: 50%;
+            filter: drop-shadow(0 0 5px rgba(233, 69, 96, 0.7));
+        }
+
+        .fragment.falling {
+            animation: fragmentFall 2s forwards;
+        }
+
+        @keyframes fragmentFall {
+            0% {
+                opacity: 0.8;
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(400px) rotate(360deg);
+            }
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes textFlash {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="lyrics-container">
+            <div class="lyrics-line" id="lyrics1">Then maybe</div>
+            <div class="lyrics-line" id="lyrics2">Then maybe you won't leave me so DISHEARTENED</div>
+        </div>
+        
+        <div class="heart-container">
+            <div class="heart" id="heart">
+                <div class="heart-shape" id="heartShape"></div>
+                <div class="heart-piece left" id="heartLeft"></div>
+                <div class="heart-piece right" id="heartRight"></div>
+                <div class="crack-line horizontal" style="--transform: rotate(0deg)"></div>
+                <div class="crack-line diagonal1" style="--transform: rotate(30deg)"></div>
+                <div class="crack-line diagonal2" style="--transform: rotate(-30deg)"></div>
+            </div>
+        </div>
+        
+        <div class="heart-rate-monitor" id="heartRateMonitor">
+            <div class="monitor-screen">
+                <div class="ecg-line"></div>
+                <canvas class="ecg-canvas" id="ecgCanvas"></canvas>
+            </div>
+            <div class="heart-rate-text">
+                <span>HEART RATE</span>
+                <span id="heartRateValue">72 BPM</span>
+            </div>
+        </div>
+        
+        <div class="completion-text" id="completionText">Heart rate stabilizing... hope remains.</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lyrics1 = document.getElementById('lyrics1');
+            const lyrics2 = document.getElementById('lyrics2');
+            const heart = document.getElementById('heart');
+            const heartShape = document.getElementById('heartShape');
+            const heartLeft = document.getElementById('heartLeft');
+            const heartRight = document.getElementById('heartRight');
+            const crackLines = document.querySelectorAll('.crack-line');
+            const heartRateMonitor = document.getElementById('heartRateMonitor');
+            const heartRateValue = document.getElementById('heartRateValue');
+            const completionText = document.getElementById('completionText');
+            const ecgCanvas = document.getElementById('ecgCanvas');
+            const ctx = ecgCanvas.getContext('2d');
+            
+            // Set canvas size
+            ecgCanvas.width = ecgCanvas.offsetWidth;
+            ecgCanvas.height = ecgCanvas.offsetHeight;
+            
+            // Create heart fragments
+            const fragments = [];
+            const numFragments = 40;
+            
+            for (let i = 0; i < numFragments; i++) {
+                const fragment = document.createElement('div');
+                fragment.className = 'fragment';
+                
+                // Random position around heart
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 100 + Math.random() * 80;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                fragment.style.left = `${150 + x}px`;
+                fragment.style.top = `${135 + y}px`;
+                
+                heart.appendChild(fragment);
+                fragments.push(fragment);
+            }
+            
+            // ECG drawing variables
+            let ecgX = 0;
+            let heartRate = 72;
+            let ecgSpeed = 2;
+            let ecgAmplitude = 20;
+            let isDrawingECG = false;
+            let ecgAnimationId;
+            
+            // Draw ECG line
+            function drawECG() {
+                if (!isDrawingECG) return;
+                
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#4ecdc4';
+                
+                // Calculate heartbeat pattern based on heart rate
+                const beatInterval = 60000 / heartRate; // ms between beats
+                const beatProgress = (ecgX % beatInterval) / beatInterval;
+                
+                // Draw ECG line
+                ctx.beginPath();
+                ctx.moveTo(ecgX - 1, ecgCanvas.height / 2);
+                
+                if (beatProgress < 0.1) {
+                    // P wave
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2 - ecgAmplitude * 0.2);
+                } else if (beatProgress < 0.15) {
+                    // PR segment
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2);
+                } else if (beatProgress < 0.2) {
+                    // Q wave
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2 + ecgAmplitude * 0.1);
+                } else if (beatProgress < 0.25) {
+                    // R wave (spike)
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2 - ecgAmplitude * 1.5);
+                } else if (beatProgress < 0.3) {
+                    // S wave
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2 + ecgAmplitude * 0.2);
+                } else if (beatProgress < 0.4) {
+                    // ST segment
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2);
+                } else if (beatProgress < 0.6) {
+                    // T wave
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2 - ecgAmplitude * 0.3);
+                } else {
+                    // Baseline
+                    ctx.lineTo(ecgX, ecgCanvas.height / 2);
+                }
+                
+                ctx.stroke();
+                
+                // Move to next position
+                ecgX += ecgSpeed;
+                
+                // Clear canvas when reaching the end
+                if (ecgX > ecgCanvas.width) {
+                    ctx.clearRect(0, 0, ecgCanvas.width, ecgCanvas.height);
+                    ecgX = 0;
+                }
+                
+                ecgAnimationId = requestAnimationFrame(drawECG);
+            }
+            
+            // Animation timeline
+            setTimeout(() => {
+                lyrics1.style.animation = 'fadeInUp 0.5s forwards';
+            }, 250);
+            
+            setTimeout(() => {
+                lyrics2.style.animation = 'fadeInUp 0.5s forwards';
+            }, 750);
+            
+            // Show heart
+            setTimeout(() => {
+                heartShape.style.opacity = '1';
+                heartShape.style.animation = 'fadeInUp 0.5s forwards';
+                
+                // Start heart beating
+                setTimeout(() => {
+                    heartShape.classList.add('beating');
+                }, 1000);
+            }, 1250);
+            
+            // Show heart rate monitor
+            setTimeout(() => {
+                heartRateMonitor.style.opacity = '1';
+                heartRateMonitor.style.animation = 'fadeInUp 0.5s forwards';
+                
+                // Start ECG animation
+                isDrawingECG = true;
+                drawECG();
+            }, 2500);
+            
+            // Heart starts to crack
+            setTimeout(() => {
+                // Slow down heart rate
+                const heartRateInterval = setInterval(() => {
+                    if (heartRate > 40) {
+                        heartRate -= 2;
+                        heartRateValue.textContent = `${heartRate} BPM`;
+                        ecgAmplitude = 20 * (heartRate / 72); // Decrease amplitude as heart rate drops
+                    } else {
+                        clearInterval(heartRateInterval);
+                    }
+                }, 200);
+                
+                // Show cracks
+                crackLines.forEach((line, index) => {
+                    setTimeout(() => {
+                        line.classList.add('visible');
+                    }, index * 300);
+                });
+                
+                // Crack heart
+                setTimeout(() => {
+                    heartShape.classList.add('cracked');
+                }, 1000);
+            }, 3500);
+            
+            // Heart breaks apart
+            setTimeout(() => {
+                // Stop heart beating
+                heartShape.classList.remove('beating');
+                
+                // Hide original heart shape
+                heartShape.style.opacity = '0';
+                
+                // Show heart pieces
+                heartLeft.style.opacity = '1';
+                heartRight.style.opacity = '1';
+                
+                // Make heart pieces fall
+                setTimeout(() => {
+                    heartLeft.classList.add('falling-left');
+                    heartRight.classList.add('falling-right');
+                }, 500);
+                
+                // Make fragments fall
+                fragments.forEach((fragment, index) => {
+                    setTimeout(() => {
+                        fragment.classList.add('falling');
+                    }, index * 50);
+                });
+            }, 5500);
+            
+            // Show completion text
+            setTimeout(() => {
+                completionText.style.opacity = '1';
+                completionText.style.animation = 'textFlash 1s infinite';
+            }, 7500);
+        });
+    </script>
+</body>
+</html>
