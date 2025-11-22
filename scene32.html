@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World.execute(me) - Scene 32</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .lyrics {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            z-index: 10;
+        }
+        
+        .trap-container {
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out 0.5s forwards;
+        }
+        
+        .trap-boundary {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            animation: strengthenBoundary 2s infinite alternate;
+        }
+        
+        .trap-text {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            animation: emphasizeText 3s infinite alternate;
+        }
+        
+        .loop-arrows {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .loop-arrow {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            opacity: 0;
+            animation: rotateArrow 4s infinite linear;
+        }
+        
+        .loop-arrow.top-left {
+            top: 20px;
+            left: 20px;
+            animation-delay: 0s;
+        }
+        
+        .loop-arrow.top-right {
+            top: 20px;
+            right: 20px;
+            animation-delay: 1s;
+        }
+        
+        .loop-arrow.bottom-left {
+            bottom: 20px;
+            left: 20px;
+            animation-delay: 2s;
+        }
+        
+        .loop-arrow.bottom-right {
+            bottom: 20px;
+            right: 20px;
+            animation-delay: 3s;
+        }
+        
+        .loop-arrow::before {
+            content: '↻';
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .escape-attempt {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            animation: escapeFail 3s infinite;
+        }
+        
+        .escape-attempt::before {
+            content: '!';
+            font-size: 1.5rem;
+            color: #000;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes strengthenBoundary {
+            0% {
+                border-color: #333;
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            }
+            100% {
+                border-color: #fff;
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            }
+        }
+        
+        @keyframes emphasizeText {
+            0% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes rotateArrow {
+            0% {
+                transform: rotate(0deg);
+                opacity: 0;
+            }
+            25% {
+                opacity: 0.7;
+            }
+            75% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes escapeFail {
+            0% {
+                transform: translate(0, 0);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            50% {
+                transform: translate(100px, -100px);
+            }
+            80% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="lyrics">Though we are trapped / We are trapped ah</div>
+        
+        <div class="trap-container">
+            <div class="trap-boundary"></div>
+            
+            <div class="loop-arrows">
+                <div class="loop-arrow top-left"></div>
+                <div class="loop-arrow top-right"></div>
+                <div class="loop-arrow bottom-left"></div>
+                <div class="loop-arrow bottom-right"></div>
+            </div>
+            
+            <div class="trap-text">TRAPPED</div>
+            
+            <div class="escape-attempt"></div>
+        </div>
+    </div>
+</body>
+</html>
