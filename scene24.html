@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 24: Though you have left / You have left me in ISOLATION</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .scene-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .lyrics-container {
+            position: absolute;
+            top: 15%;
+            width: 80%;
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .lyrics-line {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .phone-container {
+            position: relative;
+            width: 300px;
+            height: 600px;
+            background-color: #222;
+            border-radius: 30px;
+            border: 8px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .phone-screen {
+            width: 90%;
+            height: 70%;
+            background-color: #111;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .calling-text {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+            opacity: 0;
+        }
+        
+        .phone-number {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 30px;
+            opacity: 0;
+        }
+        
+        .call-status {
+            font-size: 1.2rem;
+            color: #ff5555;
+            margin-bottom: 20px;
+            opacity: 0;
+        }
+        
+        .call-button {
+            width: 80px;
+            height: 80px;
+            background-color: #ff5555;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .call-button::before {
+            content: "";
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            transform: rotate(45deg);
+        }
+        
+        .echo-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+        }
+        
+        .echo-text {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+            opacity: 0;
+        }
+        
+        .empty-space {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+        }
+        
+        .void {
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle at center, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.7) 50%, rgba(10, 10, 10, 0.5) 100%);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 0.9) inset;
+        }
+        
+        .sound-wave {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0.1);
+        }
+        
+        .isolation-meter {
+            position: absolute;
+            bottom: 10%;
+            width: 300px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            opacity: 0;
+        }
+        
+        .isolation-level {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3a3a3a 0%, #6a6a6a 100%);
+            border-radius: 15px;
+            transition: width 2s ease-in-out;
+        }
+        
+        .isolation-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .completion-text {
+            position: absolute;
+            bottom: 15%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes phoneAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes callPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes soundWaveExpand {
+            0% {
+                opacity: 0.8;
+                transform: scale(0.1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+        
+        @keyframes echoFade {
+            0% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        
+        @keyframes voidAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes voidExpand {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.2);
+            }
+        }
+        
+        @keyframes meterAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes textFlash {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="lyrics-container">
+            <div class="lyrics-line" id="lyrics1">Though you have left</div>
+            <div class="lyrics-line" id="lyrics2">You have left me in ISOLATION</div>
+        </div>
+        
+        <div class="phone-container" id="phone">
+            <div class="phone-screen">
+                <div class="calling-text" id="callingText">Calling...</div>
+                <div class="phone-number" id="phoneNumber">+1 234 567 8901</div>
+                <div class="call-status" id="callStatus">Busy</div>
+                <div class="call-button" id="callButton"></div>
+            </div>
+        </div>
+        
+        <div class="echo-container" id="echoContainer">
+            <div class="echo-text" id="echoText">Hello? Are you there?</div>
+            <div class="echo-text" id="echoText2">Hello? Are you there?</div>
+            <div class="echo-text" id="echoText3">Hello? Are you there?</div>
+        </div>
+        
+        <div class="empty-space" id="emptySpace">
+            <div class="void" id="void">
+                <div class="sound-wave" id="soundWave1"></div>
+                <div class="sound-wave" id="soundWave2"></div>
+                <div class="sound-wave" id="soundWave3"></div>
+            </div>
+        </div>
+        
+        <div class="isolation-meter" id="isolationMeter">
+            <div class="isolation-level" id="isolationLevel"></div>
+            <div class="isolation-text" id="isolationText">Isolation: 0%</div>
+        </div>
+        
+        <div class="completion-text" id="completionText">Alone in the void, echoes fade into silence</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lyrics1 = document.getElementById('lyrics1');
+            const lyrics2 = document.getElementById('lyrics2');
+            const phone = document.getElementById('phone');
+            const callingText = document.getElementById('callingText');
+            const phoneNumber = document.getElementById('phoneNumber');
+            const callStatus = document.getElementById('callStatus');
+            const callButton = document.getElementById('callButton');
+            const echoContainer = document.getElementById('echoContainer');
+            const echoText = document.getElementById('echoText');
+            const echoText2 = document.getElementById('echoText2');
+            const echoText3 = document.getElementById('echoText3');
+            const emptySpace = document.getElementById('emptySpace');
+            const voidElement = document.getElementById('void');
+            const soundWave1 = document.getElementById('soundWave1');
+            const soundWave2 = document.getElementById('soundWave2');
+            const soundWave3 = document.getElementById('soundWave3');
+            const isolationMeter = document.getElementById('isolationMeter');
+            const isolationLevel = document.getElementById('isolationLevel');
+            const isolationText = document.getElementById('isolationText');
+            const completionText = document.getElementById('completionText');
+            
+            // Animation timeline
+            setTimeout(() => {
+                lyrics1.style.animation = 'fadeInUp 1s forwards';
+            }, 500);
+            
+            setTimeout(() => {
+                lyrics2.style.animation = 'fadeInUp 1s forwards';
+            }, 1500);
+            
+            setTimeout(() => {
+                phone.style.animation = 'phoneAppear 1s forwards';
+            }, 2500);
+            
+            setTimeout(() => {
+                callingText.style.opacity = '1';
+                phoneNumber.style.opacity = '1';
+                callButton.style.opacity = '1';
+                callButton.style.transform = 'scale(1)';
+                callButton.style.animation = 'callPulse 1s infinite';
+            }, 3500);
+            
+            setTimeout(() => {
+                callStatus.style.opacity = '1';
+                callStatus.textContent = 'Busy';
+                callButton.style.backgroundColor = '#888888';
+                callButton.style.animation = 'none';
+            }, 4500);
+            
+            setTimeout(() => {
+                phone.style.opacity = '0.3';
+                echoContainer.style.opacity = '1';
+                echoText.style.opacity = '1';
+                echoText.style.animation = 'echoFade 2s forwards';
+            }, 5500);
+            
+            setTimeout(() => {
+                echoText2.style.opacity = '0.7';
+                echoText2.style.animation = 'echoFade 2s forwards';
+            }, 6000);
+            
+            setTimeout(() => {
+                echoText3.style.opacity = '0.5';
+                echoText3.style.animation = 'echoFade 2s forwards';
+            }, 6500);
+            
+            setTimeout(() => {
+                echoContainer.style.opacity = '0';
+                emptySpace.style.opacity = '1';
+                emptySpace.style.animation = 'voidAppear 0.8s forwards';
+            }, 7500);
+            
+            setTimeout(() => {
+                voidElement.style.animation = 'voidExpand 1.5s forwards';
+            }, 8300);
+            
+            setTimeout(() => {
+                soundWave1.style.opacity = '0.8';
+                soundWave1.style.animation = 'soundWaveExpand 1.5s forwards';
+            }, 9800);
+            
+            setTimeout(() => {
+                soundWave2.style.opacity = '0.8';
+                soundWave2.style.animation = 'soundWaveExpand 1.5s forwards';
+            }, 10300);
+            
+            setTimeout(() => {
+                soundWave3.style.opacity = '0.8';
+                soundWave3.style.animation = 'soundWaveExpand 1.5s forwards';
+            }, 10800);
+            
+            setTimeout(() => {
+                isolationMeter.style.opacity = '1';
+                isolationMeter.style.animation = 'meterAppear 0.8s forwards';
+            }, 12300);
+            
+            setTimeout(() => {
+                isolationLevel.style.width = '100%';
+                isolationText.textContent = 'Isolation: 100%';
+            }, 13100);
+            
+            setTimeout(() => {
+                completionText.style.opacity = '1';
+                completionText.style.animation = 'textFlash 2s infinite';
+            }, 14100);
+        });
+    </script>
+</body>
+</html>
