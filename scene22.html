@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景22：振动与感知</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #111 0%, #222 50%, #111 100%);
+            overflow: hidden;
+        }
+
+        /* 网格背景 */
+        .grid-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        /* 歌词文本 */
+        .lyrics {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 42px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+
+        .lyrics-line-1 {
+            margin-bottom: 20px;
+        }
+
+        .lyrics-line-2 {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* 振动场景容器 */
+        .vibration-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+
+        /* 振动源 */
+        .vibration-source {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #fff 0%, #aaa 70%, #333 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            animation: pulse 2s infinite;
+        }
+
+        /* 振动波 */
+        .wave {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            opacity: 0;
+            animation: waveExpand 3s infinite;
+        }
+
+        .wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .wave:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+
+        .wave:nth-child(5) {
+            animation-delay: 2s;
+        }
+
+        /* 共振频率指示器 */
+        .frequency-indicator {
+            position: absolute;
+            bottom: 100px;
+            width: 600px;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+            opacity: 0;
+            animation: fadeIn 2s 1s forwards;
+        }
+
+        .frequency-bar {
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(180deg, #333 0%, #666 100%);
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .frequency-level {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #fff 0%, #888 100%);
+            border-radius: 5px;
+            transition: height 0.3s ease;
+        }
+
+        /* 感知接收器 */
+        .receiver {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #444 0%, #222 100%);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            opacity: 0;
+        }
+
+        .receiver-1 {
+            top: 20%;
+            left: 20%;
+            animation: fadeIn 1s 2s forwards;
+        }
+
+        .receiver-2 {
+            top: 20%;
+            right: 20%;
+            animation: fadeIn 1s 2.5s forwards;
+        }
+
+        .receiver-3 {
+            bottom: 20%;
+            left: 20%;
+            animation: fadeIn 1s 3s forwards;
+        }
+
+        .receiver-4 {
+            bottom: 20%;
+            right: 20%;
+            animation: fadeIn 1s 3.5s forwards;
+        }
+
+        .receiver::before {
+            content: '';
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #fff 0%, #888 70%, transparent 100%);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: receiverPulse 2s infinite;
+        }
+
+        /* 连接线 */
+        .connection-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            height: 2px;
+            transform-origin: left center;
+            opacity: 0;
+            animation: connectionPulse 2s infinite;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes waveExpand {
+            0% {
+                width: 60px;
+                height: 60px;
+                opacity: 0.8;
+            }
+            100% {
+                width: 700px;
+                height: 700px;
+                opacity: 0;
+            }
+        }
+
+        @keyframes receiverPulse {
+            0% { transform: scale(0.8); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(0.8); opacity: 0.3; }
+        }
+
+        @keyframes connectionPulse {
+            0% { opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="grid-background"></div>
+        
+        <div class="lyrics">
+            <div class="lyrics-line-1">If I can / If I can feel your</div>
+            <div class="lyrics-line-2">VIBRATIONS</div>
+        </div>
+        
+        <div class="vibration-container">
+            <!-- 振动源 -->
+            <div class="vibration-source"></div>
+            
+            <!-- 振动波 -->
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            
+            <!-- 感知接收器 -->
+            <div class="receiver receiver-1" id="receiver1"></div>
+            <div class="receiver receiver-2" id="receiver2"></div>
+            <div class="receiver receiver-3" id="receiver3"></div>
+            <div class="receiver receiver-4" id="receiver4"></div>
+            
+            <!-- 连接线将通过JavaScript动态创建 -->
+        </div>
+        
+        <!-- 共振频率指示器 -->
+        <div class="frequency-indicator">
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 45%;"></div>
+            </div>
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 65%;"></div>
+            </div>
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 35%;"></div>
+            </div>
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 75%;"></div>
+            </div>
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 55%;"></div>
+            </div>
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 85%;"></div>
+            </div>
+            <div class="frequency-bar">
+                <div class="frequency-level" style="height: 95%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取振动源和接收器位置
+            const vibrationSource = document.querySelector('.vibration-source');
+            const receivers = document.querySelectorAll('.receiver');
+            const vibrationContainer = document.querySelector('.vibration-container');
+            
+            // 创建连接线
+            function createConnectionLines() {
+                const sourceRect = vibrationSource.getBoundingClientRect();
+                const containerRect = vibrationContainer.getBoundingClientRect();
+                
+                // 计算振动源相对于容器的位置
+                const sourceX = sourceRect.left - containerRect.left + sourceRect.width / 2;
+                const sourceY = sourceRect.top - containerRect.top + sourceRect.height / 2;
+                
+                receivers.forEach((receiver, index) => {
+                    // 延迟创建连接线，与接收器淡入同步
+                    setTimeout(() => {
+                        const receiverRect = receiver.getBoundingClientRect();
+                        
+                        // 计算接收器相对于容器的位置
+                        const receiverX = receiverRect.left - containerRect.left + receiverRect.width / 2;
+                        const receiverY = receiverRect.top - containerRect.top + receiverRect.height / 2;
+                        
+                        // 计算连接线长度和角度
+                        const length = Math.sqrt(Math.pow(receiverX - sourceX, 2) + Math.pow(receiverY - sourceY, 2));
+                        const angle = Math.atan2(receiverY - sourceY, receiverX - sourceX) * 180 / Math.PI;
+                        
+                        // 创建连接线元素
+                        const line = document.createElement('div');
+                        line.className = 'connection-line';
+                        line.style.width = `${length}px`;
+                        line.style.left = `${sourceX}px`;
+                        line.style.top = `${sourceY}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        line.style.animationDelay = `${index * 0.5}s`;
+                        
+                        // 添加到容器
+                        vibrationContainer.appendChild(line);
+                        
+                        // 设置连接线动画延迟
+                        setTimeout(() => {
+                            line.style.opacity = '1';
+                        }, 100);
+                    }, 2000 + index * 500); // 与接收器淡入同步
+                });
+            }
+            
+            // 随机更新频率指示器
+            function updateFrequencyIndicators() {
+                const frequencyLevels = document.querySelectorAll('.frequency-level');
+                
+                frequencyLevels.forEach(level => {
+                    // 随机高度变化，模拟振动频率
+                    const randomHeight = Math.floor(Math.random() * 60) + 30; // 30%到90%之间
+                    level.style.height = `${randomHeight}%`;
+                });
+            }
+            
+            // 初始化
+            createConnectionLines();
+            
+            // 定期更新频率指示器
+            setInterval(updateFrequencyIndicators, 500);
+        });
+    </script>
+</body>
+</html>
