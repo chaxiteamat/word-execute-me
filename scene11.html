@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 11: Oh we can travel / To A.D to B.C</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out forwards;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out 0.5s forwards;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 500px;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out 1s forwards;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .time-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out 2s forwards;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        .progress-container {
+            position: absolute;
+            bottom: 100px;
+            width: 80%;
+            max-width: 800px;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out 2s forwards;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .era-indicator {
+            position: absolute;
+            top: -30px;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0.7;
+        }
+
+        .era-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .nav-button {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out 3s forwards;
+        }
+
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Oh we can travel</h1>
+        <h2 class="subtitle">To A.D to B.C</h2>
+        
+        <div class="canvas-container">
+            <canvas id="timeCanvas"></canvas>
+        </div>
+        
+        <div class="time-display" id="timeDisplay">Current Time: 2023 A.D.</div>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="era-marker" id="eraMarker"></div>
+                <div class="era-indicator" id="eraIndicator">2023 A.D.</div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <a href="scene10.html" class="nav-button">Previous</a>
+            <a href="scene11-5.html" class="nav-button">Next</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('timeCanvas');
+        const ctx = canvas.getContext('2d');
+        const timeDisplay = document.getElementById('timeDisplay');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Animation parameters
+        let animationProgress = 0;
+        const animationDuration = 8000; // 8 seconds (00:49.00 - 00:57.00)
+        
+        // Time tunnel parameters
+        const tunnel = {
+            segments: 30,
+            radius: 50,
+            length: 800,
+            z: 0,
+            speed: 5
+        };
+        
+        // Historical events data
+        const historicalEvents = [
+            { year: 2023, title: "Present Day", description: "AI and Human Connection" },
+            { year: 2000, title: "Digital Age", description: "Internet Revolution" },
+            { year: 1969, title: "Moon Landing", description: "Humanity Reaches Space" },
+            { year: 1945, title: "Computer Era", description: "First Electronic Computers" },
+            { year: 1905, title: "Einstein's Miracle", description: "Theory of Relativity" },
+            { year: 1789, title: "Industrial Revolution", description: "Machines Transform Society" },
+            { year: 1492, title: "Age of Discovery", description: "New Worlds Explored" },
+            { year: 476, title: "Fall of Rome", description: "Ancient World Ends" },
+            { year: 0, title: "Common Era", description: "A.D. Begins" },
+            { year: -500, title: "Ancient Greece", description: "Philosophy and Democracy" },
+            { year: -1000, title: "Iron Age", description: "Civilization Advances" },
+            { year: -2000, title: "Bronze Age", description: "Early Civilizations" }
+        ];
+        
+        // Time ripples array
+        const timeRipples = [];
+        
+        // Timeline parameters
+        const timeline = {
+            startX: 50,
+            endX: canvas.width - 50,
+            y: canvas.height / 2,
+            nodes: [],
+            particles: []
+        };
+        
+        // Initialize historical nodes
+        function initTimelineNodes() {
+            const nodeCount = historicalEvents.length;
+            const nodeSpacing = (timeline.endX - timeline.startX) / (nodeCount - 1);
+            
+            for (let i = 0; i < nodeCount; i++) {
+                const x = timeline.startX + i * nodeSpacing;
+                const event = historicalEvents[i];
+                const era = event.year > 0 ? `${Math.abs(event.year)} A.D.` : `${Math.abs(event.year)} B.C.`;
+                
+                timeline.nodes.push({
+                    x: x,
+                    y: timeline.y,
+                    year: event.year,
+                    era: era,
+                    title: event.title,
+                    description: event.description,
+                    radius: 5,
+                    active: false,
+                    scale: 1,
+                    rotation: 0
+                });
+            }
+        }
+        
+        // Initialize particles
+        function initParticles() {
+            const particleCount = 100;
+            
+            for (let i = 0; i < particleCount; i++) {
+                timeline.particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 2 + 1,
+                    color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.2})`,
+                    group: Math.random() > 0.5 ? 'ad' : 'bc'
+                });
+            }
+        }
+        
+        // Draw 3D time tunnel
+        function drawTimeTunnel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Update tunnel position
+            tunnel.z += tunnel.speed * (1 + animationProgress * 2);
+            if (tunnel.z > tunnel.length) {
+                tunnel.z = 0;
+            }
+            
+            // Draw tunnel segments
+            for (let i = 0; i < tunnel.segments; i++) {
+                const z = (tunnel.z + i * (tunnel.length / tunnel.segments)) % tunnel.length;
+                const scale = 1 - z / tunnel.length;
+                const radius = tunnel.radius * scale;
+                
+                // Calculate opacity based on position
+                const opacity = scale * 0.7;
+                
+                // Draw tunnel segment
+                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.lineWidth = 2 * scale;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Draw rotating elements
+                const angle = (i / tunnel.segments) * Math.PI * 2 + Date.now() * 0.001;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 3 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw tunnel center glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 100);
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${0.3 * animationProgress})`);
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 100, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Draw timeline
+        function drawTimeline() {
+            // Draw main timeline
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(timeline.startX, timeline.y);
+            ctx.lineTo(timeline.endX, timeline.y);
+            ctx.stroke();
+            
+            // Draw time markers
+            const markerCount = 10;
+            for (let i = 0; i <= markerCount; i++) {
+                const x = timeline.startX + (timeline.endX - timeline.startX) * (i / markerCount);
+                const height = 10 + (i % 2) * 5;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, timeline.y - height);
+                ctx.lineTo(x, timeline.y + height);
+                ctx.stroke();
+            }
+            
+            // Draw A.D. and B.C. labels
+            ctx.font = '16px Courier New';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText('B.C.', timeline.startX + 10, timeline.y - 20);
+            ctx.fillText('A.D.', timeline.endX - 40, timeline.y - 20);
+            
+            // Draw moving time indicator
+            const timeIndicatorX = timeline.startX + (timeline.endX - timeline.startX) * animationProgress;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(timeIndicatorX, timeline.y - 15);
+            ctx.lineTo(timeIndicatorX, timeline.y + 15);
+            ctx.stroke();
+            
+            // Draw glow around time indicator
+            const glowGradient = ctx.createRadialGradient(
+                timeIndicatorX, timeline.y, 0,
+                timeIndicatorX, timeline.y, 20
+            );
+            glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(timeIndicatorX, timeline.y, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Create time ripple effect
+            if (Math.random() < 0.1) {
+                timeRipples.push({
+                    x: timeIndicatorX,
+                    y: timeline.y,
+                    radius: 0,
+                    maxRadius: 50,
+                    opacity: 0.5
+                });
+            }
+            
+            // Draw time ripples
+            for (let i = timeRipples.length - 1; i >= 0; i--) {
+                const ripple = timeRipples[i];
+                ripple.radius += 2;
+                ripple.opacity -= 0.01;
+                
+                if (ripple.opacity <= 0) {
+                    timeRipples.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.strokeStyle = `rgba(255, 255, 255, ${ripple.opacity})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw arrow at the end
+            ctx.beginPath();
+            ctx.moveTo(timeline.endX, timeline.y);
+            ctx.lineTo(timeline.endX - 10, timeline.y - 5);
+            ctx.lineTo(timeline.endX - 10, timeline.y + 5);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fill();
+        }
+        
+        // Draw historical nodes
+        function drawNodes() {
+            timeline.nodes.forEach((node, index) => {
+                // Highlight active nodes based on animation progress
+                const activeThreshold = (index / timeline.nodes.length) * animationProgress;
+                node.active = activeThreshold > 0.5;
+                
+                // Scale and rotate active nodes
+                if (node.active) {
+                    node.scale = 1 + Math.sin(Date.now() * 0.002 + index) * 0.2;
+                    node.rotation += 0.02;
+                } else {
+                    node.scale = 1;
+                    node.rotation = 0;
+                }
+                
+                // Draw node
+                ctx.save();
+                ctx.translate(node.x, node.y);
+                ctx.rotate(node.rotation);
+                ctx.scale(node.scale, node.scale);
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, node.radius * (node.active ? 1.5 : 1), 0, Math.PI * 2);
+                ctx.fillStyle = node.active ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)';
+                ctx.fill();
+                
+                // Draw glow for active nodes
+                if (node.active) {
+                    const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+                    glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                    glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
+                    ctx.fillStyle = glowGradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+                
+                // Draw era text for active nodes
+                if (node.active) {
+                    ctx.font = '10px Courier New';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(node.era, node.x, node.y - 15);
+                    
+                    // Draw event title and description
+                    ctx.font = 'bold 12px Courier New';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.fillText(node.title, node.x, node.y + 25);
+                    
+                    ctx.font = '10px Courier New';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.fillText(node.description, node.x, node.y + 40);
+                }
+            });
+        }
+        
+        // Draw particles and their merging
+        function drawParticles() {
+            // Update particle positions
+            timeline.particles.forEach(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                
+                // Bounce off walls
+                if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+                
+                // Attraction to timeline based on animation progress
+                if (animationProgress > 0.3) {
+                    const distToTimeline = Math.abs(particle.y - timeline.y);
+                    if (distToTimeline > 20) {
+                        particle.vy += (timeline.y - particle.y) * 0.001 * animationProgress;
+                    }
+                }
+                
+                // Merging effect based on animation progress
+                if (animationProgress > 0.6) {
+                    const centerX = canvas.width / 2;
+                    const attractionForce = 0.001 * animationProgress;
+                    particle.vx += (centerX - particle.x) * attractionForce;
+                    
+                    // Slow down as they merge
+                    particle.vx *= 0.99;
+                    particle.vy *= 0.99;
+                }
+                
+                // Add time distortion effect
+                if (animationProgress > 0.4) {
+                    const timeIndicatorX = timeline.startX + (timeline.endX - timeline.startX) * animationProgress;
+                    const distToIndicator = Math.abs(particle.x - timeIndicatorX);
+                    
+                    if (distToIndicator < 100) {
+                        // Create spiral motion near time indicator
+                        const angle = Math.atan2(particle.y - timeline.y, particle.x - timeIndicatorX);
+                        const spiralForce = (100 - distToIndicator) / 100 * 0.1;
+                        
+                        particle.vx += Math.cos(angle + Math.PI/2) * spiralForce;
+                        particle.vy += Math.sin(angle + Math.PI/2) * spiralForce;
+                    }
+                }
+            });
+            
+            // Draw particles with trails
+            timeline.particles.forEach(particle => {
+                // Draw particle trail
+                ctx.strokeStyle = particle.color;
+                ctx.lineWidth = particle.radius * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(particle.x, particle.y);
+                ctx.lineTo(particle.x - particle.vx * 5, particle.y - particle.vy * 5);
+                ctx.stroke();
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+                
+                // Draw particle glow
+                const glowGradient = ctx.createRadialGradient(
+                    particle.x, particle.y, 0,
+                    particle.x, particle.y, particle.radius * 3
+                );
+                glowGradient.addColorStop(0, particle.color);
+                glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Get DOM elements for progress bar
+        const progressFill = document.getElementById('progressFill');
+        const eraMarker = document.getElementById('eraMarker');
+        const eraIndicator = document.getElementById('eraIndicator');
+        const progressContainer = document.getElementById('progressContainer');
+        
+        // Update progress bar and UI style based on time period
+        function updateProgressBar() {
+            const currentYear = 2023 - Math.floor(animationProgress * 2500);
+            const era = currentYear > 0 ? `${Math.abs(currentYear)} A.D.` : `${Math.abs(currentYear)} B.C.`;
+            
+            // Update progress fill
+            progressFill.style.width = `${animationProgress * 100}%`;
+            
+            // Update era marker position
+            eraMarker.style.left = `${animationProgress * 100}%`;
+            
+            // Update era indicator text
+            eraIndicator.textContent = era;
+            
+            // Update UI style based on time period
+            if (currentYear < 500) {
+                // Ancient/Retro UI style
+                progressContainer.style.fontFamily = 'Courier New, monospace';
+                progressContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                progressContainer.style.border = '2px solid rgba(255, 255, 255, 0.7)';
+                progressContainer.style.borderRadius = '0';
+                progressContainer.style.padding = '10px';
+                progressContainer.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.3)';
+                
+                progressFill.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                progressFill.style.backgroundImage = 'repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(0, 0, 0, 0.3) 5px, rgba(0, 0, 0, 0.3) 10px)';
+                
+                eraIndicator.style.color = '#0f0';
+                eraIndicator.style.textShadow = '0 0 5px #0f0';
+                eraMarker.style.backgroundColor = '#0f0';
+                eraMarker.style.boxShadow = '0 0 5px #0f0';
+            } else if (currentYear < 1990) {
+                // Transitional UI style
+                progressContainer.style.fontFamily = 'Courier New, monospace';
+                progressContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                progressContainer.style.border = '1px solid rgba(255, 255, 255, 0.5)';
+                progressContainer.style.borderRadius = '3px';
+                progressContainer.style.padding = '8px';
+                progressContainer.style.boxShadow = 'none';
+                
+                progressFill.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+                progressFill.style.backgroundImage = 'none';
+                
+                eraIndicator.style.color = '#fff';
+                eraIndicator.style.textShadow = 'none';
+                eraMarker.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+                eraMarker.style.boxShadow = 'none';
+            } else {
+                // Modern/Flat UI style
+                progressContainer.style.fontFamily = 'Arial, sans-serif';
+                progressContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                progressContainer.style.border = 'none';
+                progressContainer.style.borderRadius = '5px';
+                progressContainer.style.padding = '5px';
+                progressContainer.style.boxShadow = 'none';
+                
+                progressFill.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                progressFill.style.backgroundImage = 'none';
+                
+                eraIndicator.style.color = '#fff';
+                eraIndicator.style.textShadow = 'none';
+                eraMarker.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                eraMarker.style.boxShadow = 'none';
+            }
+        }
+            
+            // Update time display with flip animation
+        function updateTimeDisplay() {
+            const currentYear = 2023 - Math.floor(animationProgress * 2500);
+            const era = currentYear > 0 ? `${Math.abs(currentYear)} A.D.` : `${Math.abs(currentYear)} B.C.`;
+            
+            // Add flip animation effect
+            const flipProgress = (Date.now() % 1000) / 1000;
+            const scaleY = Math.abs(Math.cos(flipProgress * Math.PI));
+            
+            ctx.save();
+            ctx.translate(canvas.width - 150, 30);
+            ctx.scale(1, scaleY);
+            
+            ctx.font = 'bold 1.5rem Courier New';
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + 0.2 * scaleY})`;
+            ctx.textAlign = 'right';
+            ctx.fillText(era, 0, 0);
+            
+            ctx.restore();
+            
+            // Update HTML display as well
+            timeDisplay.textContent = `Current Time: ${era}`;
+        }
+        
+        // Animation loop
+        function animate() {
+            // Clear canvas with trail effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update animation progress
+            animationProgress += 16 / animationDuration; // Assuming 60fps
+            if (animationProgress > 1) animationProgress = 1;
+            
+            // Draw elements in order
+            drawTimeTunnel();
+            drawTimeline();
+            drawNodes();
+            drawParticles();
+            updateTimeDisplay();
+            updateProgressBar();
+            
+            // Continue animation
+            if (animationProgress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        // Initialize and start animation
+        initTimelineNodes();
+        initParticles();
+        
+        // Start animation after a delay
+        setTimeout(() => {
+            animate();
+        }, 1000);
+    </script>
+</body>
+</html>
