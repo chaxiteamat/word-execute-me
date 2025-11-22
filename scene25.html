@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 25: If I can / If I can erase all the pointless FRAGMENTS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            overflow: hidden;
+        }
+
+        .lyrics-container {
+            position: absolute;
+            top: 10%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .lyrics-line {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .disk-container {
+            position: relative;
+            width: 80%;
+            height: 60%;
+            top: 25%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .disk {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0a 70%);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            transform-style: preserve-3d;
+            transform: rotateX(60deg);
+        }
+
+        .disk::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #16213e 0deg 60deg,
+                #0f3460 60deg 120deg,
+                #16213e 120deg 180deg,
+                #0f3460 180deg 240deg,
+                #16213e 240deg 300deg,
+                #0f3460 300deg 360deg
+            );
+            opacity: 0.8;
+        }
+
+        .disk-center {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #0a0a0a;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .fragment {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #e94560;
+            border-radius: 2px;
+            opacity: 0;
+            box-shadow: 0 0 5px rgba(233, 69, 96, 0.5);
+        }
+
+        .fragment.erasing {
+            animation: eraseFragment 0.75s forwards;
+        }
+
+        @keyframes eraseFragment {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.5);
+                background-color: #ff6b6b;
+                box-shadow: 0 0 15px rgba(255, 107, 107, 0.8);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        .defrag-progress {
+            position: absolute;
+            bottom: 15%;
+            width: 60%;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .defrag-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #e94560 0%, #ff6b6b 100%);
+            border-radius: 15px;
+            transition: width 0.15s ease;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        .defrag-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .completion-text {
+            position: absolute;
+            bottom: 8%;
+            font-size: 1.8rem;
+            font-weight: bold;
+            opacity: 0;
+            text-align: center;
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .command-line {
+            position: absolute;
+            top: 20%;
+            left: 5%;
+            width: 90%;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+        }
+
+        .command-prompt {
+            color: #4ecdc4;
+            margin-right: 10px;
+        }
+
+        .command-text {
+            color: #ffffff;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: #4ecdc4;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes textFlash {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes diskRotate {
+            0% {
+                transform: rotateX(60deg) rotateZ(0deg);
+            }
+            100% {
+                transform: rotateX(60deg) rotateZ(360deg);
+            }
+        }
+
+        .disk.rotating {
+            animation: diskRotate 2s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="lyrics-container">
+            <div class="lyrics-line" id="lyrics1">If I can</div>
+            <div class="lyrics-line" id="lyrics2">If I can erase all the pointless FRAGMENTS</div>
+        </div>
+        
+        <div class="command-line" id="commandLine">
+            <span class="command-prompt">C:\></span>
+            <span class="command-text" id="commandText">defrag C: /f</span>
+            <span class="cursor"></span>
+        </div>
+        
+        <div class="disk-container">
+            <div class="disk" id="disk">
+                <div class="disk-center"></div>
+                <!-- Fragments will be dynamically generated -->
+            </div>
+        </div>
+        
+        <div class="defrag-progress" id="defragProgress">
+            <div class="defrag-bar" id="defragBar"></div>
+            <div class="defrag-text" id="defragText">Defragmenting: 0%</div>
+        </div>
+        
+        <div class="completion-text" id="completionText">Disk defragmentation complete. System optimized.</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lyrics1 = document.getElementById('lyrics1');
+            const lyrics2 = document.getElementById('lyrics2');
+            const commandLine = document.getElementById('commandLine');
+            const commandText = document.getElementById('commandText');
+            const disk = document.getElementById('disk');
+            const defragProgress = document.getElementById('defragProgress');
+            const defragBar = document.getElementById('defragBar');
+            const defragText = document.getElementById('defragText');
+            const completionText = document.getElementById('completionText');
+            
+            // Create disk fragments
+            const fragments = [];
+            const numFragments = 80;
+            
+            for (let i = 0; i < numFragments; i++) {
+                const fragment = document.createElement('div');
+                fragment.className = 'fragment';
+                
+                // Calculate position in circular pattern
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 100 + Math.random() * 150; // Distance from center
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                // Position fragment
+                fragment.style.left = `${250 + x}px`; // 250 is center of disk
+                fragment.style.top = `${250 + y}px`;
+                
+                // Random rotation
+                fragment.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                disk.appendChild(fragment);
+                fragments.push(fragment);
+            }
+            
+            // Animation timeline
+            setTimeout(() => {
+                lyrics1.style.animation = 'fadeInUp 0.5s forwards';
+            }, 250);
+            
+            setTimeout(() => {
+                lyrics2.style.animation = 'fadeInUp 0.5s forwards';
+            }, 750);
+            
+            // Show command line
+            setTimeout(() => {
+                commandLine.style.opacity = '1';
+                commandLine.style.animation = 'fadeInUp 0.25s forwards';
+            }, 1250);
+            
+            // Type command
+            setTimeout(() => {
+                let command = 'defrag C: /f';
+                let index = 0;
+                commandText.textContent = '';
+                
+                const typeInterval = setInterval(() => {
+                    if (index < command.length) {
+                        commandText.textContent += command[index];
+                        index++;
+                    } else {
+                        clearInterval(typeInterval);
+                    }
+                }, 50);
+            }, 1500);
+            
+            // Start disk rotation and show fragments
+            setTimeout(() => {
+                disk.classList.add('rotating');
+                defragProgress.style.opacity = '1';
+                defragProgress.style.animation = 'fadeInUp 0.25s forwards';
+                
+                // Show fragments
+                fragments.forEach((fragment, index) => {
+                    setTimeout(() => {
+                        fragment.style.opacity = '0.8';
+                    }, index * 10);
+                });
+            }, 2250);
+            
+            // Start defragmentation process
+            setTimeout(() => {
+                let progress = 0;
+                const defragInterval = setInterval(() => {
+                    if (progress <= 100) {
+                        // Update progress bar
+                        defragBar.style.width = `${progress}%`;
+                        defragText.textContent = `Defragmenting: ${progress}%`;
+                        
+                        // Erase fragments based on progress
+                        const fragmentsToErase = Math.floor((progress / 100) * fragments.length);
+                        for (let i = 0; i < fragmentsToErase; i++) {
+                            if (!fragments[i].classList.contains('erasing')) {
+                                fragments[i].classList.add('erasing');
+                            }
+                        }
+                        
+                        progress += 4;
+                    } else {
+                        clearInterval(defragInterval);
+                        
+                        // Show completion text
+                        setTimeout(() => {
+                            completionText.style.opacity = '1';
+                            completionText.style.animation = 'textFlash 1s infinite';
+                        }, 250);
+                    }
+                }, 50);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
