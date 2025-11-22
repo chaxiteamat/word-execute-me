@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 12: If I can / If I can give you all the stimulations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .neural-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 0.5s;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 1s;
+            color: #ccc;
+        }
+
+        .stimulation-indicator {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            opacity: 0;
+            animation: pulse 2s infinite;
+            animation-delay: 2s;
+        }
+
+        .neural-stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+            z-index: 3;
+        }
+
+        .stat-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            min-width: 200px;
+        }
+
+        .stat-value {
+            color: #0f0;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .progress-container {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            z-index: 3;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #fff;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas class="neural-canvas" id="neuralCanvas"></canvas>
+        
+        <div class="content">
+            <h1 class="title">If I can / If I can give you all the stimulations</h1>
+        </div>
+        
+        <div class="stimulation-indicator">
+            Neural signals transmitting...
+        </div>
+        
+        <div class="neural-stats">
+            <div class="stat-item">
+                <span>Neural Activity:</span>
+                <span class="stat-value" id="neuralActivity">0%</span>
+            </div>
+            <div class="stat-item">
+                <span>Signal Strength:</span>
+                <span class="stat-value" id="signalStrength">0%</span>
+            </div>
+            <div class="stat-item">
+                <span>Stimulations:</span>
+                <span class="stat-value" id="stimulations">0</span>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('neuralCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置画布大小
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 神经元网络参数
+            const neuralNetwork = {
+                neurons: [],
+                connections: [],
+                signals: [],
+                stimulations: 0
+            };
+            
+            // 初始化神经元
+            function initNeurons() {
+                const neuronCount = 50;
+                const layers = 5;
+                const neuronsPerLayer = Math.floor(neuronCount / layers);
+                
+                for (let layer = 0; layer < layers; layer++) {
+                    for (let i = 0; i < neuronsPerLayer; i++) {
+                        const x = (canvas.width / (layers + 1)) * (layer + 1);
+                        const y = (canvas.height / (neuronsPerLayer + 1)) * (i + 1);
+                        
+                        neuralNetwork.neurons.push({
+                            x: x,
+                            y: y,
+                            radius: 5 + Math.random() * 5,
+                            activation: 0,
+                            layer: layer
+                        });
+                    }
+                }
+                
+                // 创建连接
+                for (let i = 0; i < neuralNetwork.neurons.length; i++) {
+                    const neuron = neuralNetwork.neurons[i];
+                    
+                    // 连接到下一层的神经元
+                    for (let j = 0; j < neuralNetwork.neurons.length; j++) {
+                        const targetNeuron = neuralNetwork.neurons[j];
+                        
+                        if (targetNeuron.layer === neuron.layer + 1) {
+                            // 随机连接，不是所有神经元都连接
+                            if (Math.random() < 0.4) {
+                                neuralNetwork.connections.push({
+                                    from: neuron,
+                                    to: targetNeuron,
+                                    strength: 0.2 + Math.random() * 0.8
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 创建信号
+            function createSignal() {
+                // 从第一层的随机神经元开始
+                const firstLayerNeurons = neuralNetwork.neurons.filter(n => n.layer === 0);
+                if (firstLayerNeurons.length === 0) return;
+                
+                const startNeuron = firstLayerNeurons[Math.floor(Math.random() * firstLayerNeurons.length)];
+                
+                neuralNetwork.signals.push({
+                    position: 0,
+                    connection: null,
+                    currentNeuron: startNeuron,
+                    speed: 0.01 + Math.random() * 0.02,
+                    size: 2 + Math.random() * 2
+                });
+                
+                neuralNetwork.stimulations++;
+                document.getElementById('stimulations').textContent = neuralNetwork.stimulations;
+            }
+            
+            // 更新信号
+            function updateSignals() {
+                for (let i = neuralNetwork.signals.length - 1; i >= 0; i--) {
+                    const signal = neuralNetwork.signals[i];
+                    
+                    signal.position += signal.speed;
+                    
+                    // 如果信号到达当前神经元的末端
+                    if (signal.position >= 1) {
+                        // 激活当前神经元
+                        signal.currentNeuron.activation = 1;
+                        
+                        // 如果当前神经元是最后一层，移除信号
+                        if (signal.currentNeuron.layer >= 4) {
+                            neuralNetwork.signals.splice(i, 1);
+                            continue;
+                        }
+                        
+                        // 找到从当前神经元出发的连接
+                        const possibleConnections = neuralNetwork.connections.filter(
+                            c => c.from === signal.currentNeuron
+                        );
+                        
+                        if (possibleConnections.length > 0) {
+                            // 随机选择一个连接
+                            const connection = possibleConnections[Math.floor(Math.random() * possibleConnections.length)];
+                            
+                            signal.connection = connection;
+                            signal.currentNeuron = connection.to;
+                            signal.position = 0;
+                        } else {
+                            // 没有连接，移除信号
+                            neuralNetwork.signals.splice(i, 1);
+                        }
+                    }
+                }
+            }
+            
+            // 绘制神经元网络
+            function drawNeuralNetwork() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制连接
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 1;
+                
+                for (const connection of neuralNetwork.connections) {
+                    ctx.beginPath();
+                    ctx.moveTo(connection.from.x, connection.from.y);
+                    ctx.lineTo(connection.to.x, connection.to.y);
+                    ctx.stroke();
+                }
+                
+                // 绘制神经元
+                for (const neuron of neuralNetwork.neurons) {
+                    // 神经元激活度衰减
+                    if (neuron.activation > 0) {
+                        neuron.activation -= 0.01;
+                    }
+                    
+                    // 根据激活度设置颜色
+                    const activationIntensity = Math.floor(neuron.activation * 255);
+                    ctx.fillStyle = `rgb(${activationIntensity}, ${activationIntensity}, ${activationIntensity})`;
+                    
+                    ctx.beginPath();
+                    ctx.arc(neuron.x, neuron.y, neuron.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // 绘制信号
+                for (const signal of neuralNetwork.signals) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    
+                    let x, y;
+                    
+                    if (signal.connection) {
+                        // 信号在连接上
+                        const fromX = signal.connection.from.x;
+                        const fromY = signal.connection.from.y;
+                        const toX = signal.connection.to.x;
+                        const toY = signal.connection.to.y;
+                        
+                        x = fromX + (toX - fromX) * signal.position;
+                        y = fromY + (toY - fromY) * signal.position;
+                    } else {
+                        // 信号在神经元上
+                        x = signal.currentNeuron.x;
+                        y = signal.currentNeuron.y;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, signal.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // 更新统计数据
+            function updateStats() {
+                // 计算神经网络活动
+                let totalActivation = 0;
+                for (const neuron of neuralNetwork.neurons) {
+                    totalActivation += neuron.activation;
+                }
+                
+                const neuralActivity = Math.min(100, Math.floor((totalActivation / neuralNetwork.neurons.length) * 100));
+                document.getElementById('neuralActivity').textContent = neuralActivity + '%';
+                
+                // 计算信号强度
+                const signalStrength = Math.min(100, Math.floor((neuralNetwork.signals.length / 10) * 100));
+                document.getElementById('signalStrength').textContent = signalStrength + '%';
+            }
+            
+            // 动画循环
+            function animate() {
+                updateSignals();
+                drawNeuralNetwork();
+                updateStats();
+                
+                // 随机创建新信号
+                if (Math.random() < 0.05) {
+                    createSignal();
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 初始化
+            initNeurons();
+            animate();
+            
+            // 更新进度条
+            let progress = 0;
+            const progressBar = document.getElementById('progressBar');
+            const progressInterval = setInterval(() => {
+                progress += 100 / 3000; // 3秒完成
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                }
+                progressBar.style.width = progress + '%';
+            }, 30);
+        });
+    </script>
+</body>
+</html>
