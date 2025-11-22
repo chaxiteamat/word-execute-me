@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>If I approach infinity / Then you can be my LIMITATIONS</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0e27, #1a1a2e, #16213e);
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #canvas {
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .title {
+            position: absolute;
+            top: 10%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            position: absolute;
+            top: 15%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #ddd;
+            font-size: 1.6rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            z-index: 10;
+            letter-spacing: 1px;
+        }
+        
+        .formula-container {
+            position: absolute;
+            bottom: 15%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.8rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            z-index: 10;
+        }
+        
+        .formula {
+            display: inline-block;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        .coordinate-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            padding: 12px 24px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="title">If I approach infinity</div>
+    <div class="subtitle">Then you can be my LIMITATIONS</div>
+    
+    <div class="formula-container">
+        <div class="formula">lim(x→∞) sin(x)/x = 0</div>
+    </div>
+    
+    <div class="coordinate-display">
+        <div>坐标: (<span id="coordX">0</span>, <span id="coordY">0</span>)</div>
+        <div>缩放级别: <span id="zoomLevel">1.0</span>x</div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" onclick="location.href='scene8.html'">Previous</button>
+        <button class="nav-button" onclick="location.href='scene10.html'">Next</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const titleElement = document.querySelector('.title');
+        const subtitleElement = document.querySelector('.subtitle');
+        const formulaElement = document.querySelector('.formula-container');
+        
+        // 坐标显示元素
+        const coordXElement = document.getElementById('coordX');
+        const coordYElement = document.getElementById('coordY');
+        const zoomLevelElement = document.getElementById('zoomLevel');
+        
+        // 设置画布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画参数
+        let animationProgress = 0;
+        const animationDuration = 5000; // 增加到5秒，使动画更慢
+        let startTime = null;
+        let animationSpeed = 0.8; // 降低动画速度
+        
+        // 函数参数
+        let currentFunctionType = 'sin-over-x';
+        let showTrail = true;
+        let showAsymptote = true;
+        let showEnvelope = true;
+        
+        // 视图参数
+        let zoom = 1;
+        let viewX = 0;
+        let viewY = 0;
+        
+        // 轨迹点
+        const trailPoints = [];
+        const maxTrailPoints = 500;
+        
+        // 当前点
+        let currentPoint = { x: 0.1, y: 0 };
+        let targetPoint = { x: 0.1, y: 0 };
+        
+        // 函数定义
+        const functions = {
+            'sin-over-x': {
+                formula: 'y = sin(x)/x',
+                description: '当x趋近于无穷大时，sin(x)/x的值趋近于0。这个函数展示了振荡衰减的极限行为。',
+                calculate: (x) => {
+                    if (x === 0) return 1; // 极限值
+                    return Math.sin(x) / x;
+                },
+                limit: 0,
+                envelope: (x) => Math.abs(1 / x),
+                asymptote: 0
+            },
+            'exp-negative-x': {
+                formula: 'y = e^(-x)',
+                description: '当x趋近于无穷大时，e^(-x)的值趋近于0。这个函数展示了指数衰减的极限行为。',
+                calculate: (x) => Math.exp(-x),
+                limit: 0,
+                envelope: (x) => Math.exp(-x),
+                asymptote: 0
+            },
+            'reciprocal': {
+                formula: 'y = 1/x',
+                description: '当x趋近于无穷大时，1/x的值趋近于0。这个函数展示了反比例函数的极限行为。',
+                calculate: (x) => 1 / x,
+                limit: 0,
+                envelope: (x) => Math.abs(1 / x),
+                asymptote: 0
+            },
+            'log-over-x': {
+                formula: 'y = ln(x)/x',
+                description: '当x趋近于无穷大时，ln(x)/x的值趋近于0。这个函数展示了对数增长慢于线性增长。',
+                calculate: (x) => x > 0 ? Math.log(x) / x : 0,
+                limit: 0,
+                envelope: (x) => x > 0 ? Math.abs(Math.log(x) / x) : 0,
+                asymptote: 0
+            }
+        };
+        
+        // 获取当前函数
+        function getCurrentFunction() {
+            return functions[currentFunctionType];
+        }
+        
+        // 更新函数信息
+        function updateFunctionInfo() {
+            const func = getCurrentFunction();
+              
+            // 更新公式显示
+            const formulaElement = document.querySelector('.formula');
+            if (formulaElement) {
+                formulaElement.innerHTML = `lim(x→∞) ${func.formula.replace('y = ', '')} = ${func.limit}`;
+            }
+        }
+        
+        // 绘制坐标系
+        function drawCoordinateSystem() {
+            ctx.save();
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            // 绘制网格
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = scale;
+            const gridCountX = Math.ceil(canvas.width / gridSize);
+            const gridCountY = Math.ceil(canvas.height / gridSize);
+            
+            for (let i = 0; i <= gridCountX; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * gridSize, 0);
+                ctx.lineTo(i * gridSize, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let i = 0; i <= gridCountY; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * gridSize);
+                ctx.lineTo(canvas.width, i * gridSize);
+                ctx.stroke();
+            }
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // 绘制刻度
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '12px Courier New';
+            
+            // X轴刻度
+            for (let i = -10; i <= 10; i++) {
+                if (i !== 0) {
+                    const x = centerX + i * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY - 5);
+                    ctx.lineTo(x, centerY + 5);
+                    ctx.stroke();
+                    
+                    if (Math.abs(i) <= 5 || zoom > 2) {
+                        ctx.fillText(i.toString(), x - 5, centerY + 20);
+                    }
+                }
+            }
+            
+            // Y轴刻度
+            for (let i = -5; i <= 5; i++) {
+                if (i !== 0) {
+                    const y = centerY - i * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 5, y);
+                    ctx.lineTo(centerX + 5, y);
+                    ctx.stroke();
+                    
+                    if (Math.abs(i) <= 3 || zoom > 2) {
+                        ctx.fillText(i.toString(), centerX + 10, y + 5);
+                    }
+                }
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制渐近线
+        function drawAsymptote() {
+            if (!showAsymptote) return;
+            
+            ctx.save();
+            
+            const func = getCurrentFunction();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            // 绘制渐近线 y = limit
+            const asymptoteY = centerY - func.limit * scale;
+            
+            ctx.strokeStyle = 'rgba(200, 200, 255, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 5]);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, asymptoteY);
+            ctx.lineTo(canvas.width, asymptoteY);
+            ctx.stroke();
+            
+            // 添加标签
+            ctx.fillStyle = 'rgba(200, 200, 255, 0.9)';
+            ctx.font = '14px Courier New';
+            ctx.fillText(`y = ${func.limit}`, canvas.width - 80, asymptoteY - 10);
+            
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+        
+        // 绘制包络线
+        function drawEnvelope() {
+            if (!showEnvelope) return;
+            
+            ctx.save();
+            
+            const func = getCurrentFunction();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            // 绘制正包络线
+            ctx.strokeStyle = 'rgba(255, 200, 100, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            ctx.beginPath();
+            for (let px = 0; px < canvas.width; px++) {
+                const x = (px - centerX) / scale;
+                if (x > 0.1) { // 避免x=0的情况
+                    const y = func.envelope(x);
+                    const py = centerY - y * scale;
+                    
+                    if (px === 0) {
+                        ctx.moveTo(px, py);
+                    } else {
+                        ctx.lineTo(px, py);
+                    }
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制负包络线
+            ctx.beginPath();
+            for (let px = 0; px < canvas.width; px++) {
+                const x = (px - centerX) / scale;
+                if (x > 0.1) { // 避免x=0的情况
+                    const y = -func.envelope(x);
+                    const py = centerY - y * scale;
+                    
+                    if (px === 0) {
+                        ctx.moveTo(px, py);
+                    } else {
+                        ctx.lineTo(px, py);
+                    }
+                }
+            }
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+        
+        // 绘制函数曲线
+        function drawFunctionCurve() {
+            ctx.save();
+            
+            const func = getCurrentFunction();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            // 绘制函数曲线
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(100, 200, 255, 0.8)';
+            
+            ctx.beginPath();
+            for (let px = 0; px < canvas.width; px++) {
+                const x = (px - centerX) / scale;
+                if (x !== 0) { // 避免x=0的情况
+                    const y = func.calculate(x);
+                    const py = centerY - y * scale;
+                    
+                    if (px === 0) {
+                        ctx.moveTo(px, py);
+                    } else {
+                        ctx.lineTo(px, py);
+                    }
+                }
+            }
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        // 绘制轨迹
+        function drawTrail() {
+            if (!showTrail || trailPoints.length === 0) return;
+            
+            ctx.save();
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            // 绘制轨迹
+            ctx.strokeStyle = 'rgba(255, 255, 100, 0.7)';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            for (let i = 0; i < trailPoints.length; i++) {
+                const point = trailPoints[i];
+                const px = centerX + point.x * scale;
+                const py = centerY - point.y * scale;
+                
+                if (i === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制轨迹点
+            for (let i = 0; i < trailPoints.length; i++) {
+                const point = trailPoints[i];
+                const px = centerX + point.x * scale;
+                const py = centerY - point.y * scale;
+                
+                const opacity = i / trailPoints.length;
+                ctx.fillStyle = `rgba(255, 255, 100, ${opacity * 0.7})`;
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制当前点
+        function drawCurrentPoint() {
+            ctx.save();
+            
+            const func = getCurrentFunction();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 10;
+            
+            const px = centerX + currentPoint.x * scale;
+            const py = centerY - currentPoint.y * scale;
+            
+            // 绘制点
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.9)';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'rgba(255, 100, 100, 0.8)';
+            
+            ctx.beginPath();
+            ctx.arc(px, py, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制到极限点的连线
+            const limitY = centerY - func.limit * scale;
+            ctx.strokeStyle = 'rgba(255, 100, 100, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+            ctx.lineTo(px, limitY);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            ctx.restore();
+            
+            // 更新坐标显示
+            if (coordXElement) coordXElement.textContent = currentPoint.x.toFixed(3);
+            if (coordYElement) coordYElement.textContent = currentPoint.y.toFixed(6);
+            if (zoomLevelElement) zoomLevelElement.textContent = zoom.toFixed(2);
+        }
+        
+        // 更新当前点
+        function updateCurrentPoint() {
+            const func = getCurrentFunction();
+            
+            // 根据动画进度更新目标点 - 放慢速度
+            if (animationProgress < 0.5) {
+                // 前半段：从0.1到8（减少范围）
+                targetPoint.x = 0.1 + (8 - 0.1) * (animationProgress / 0.5);
+            } else {
+                // 后半段：从8到50（减少范围）
+                targetPoint.x = 8 + (50 - 8) * ((animationProgress - 0.5) / 0.5);
+            }
+            
+            targetPoint.y = func.calculate(targetPoint.x);
+            
+            // 平滑过渡到目标点 - 降低过渡速度
+            currentPoint.x += (targetPoint.x - currentPoint.x) * 0.05; // 从0.1降低到0.05
+            currentPoint.y += (targetPoint.y - currentPoint.y) * 0.05; // 从0.1降低到0.05
+            
+            // 添加到轨迹
+            if (showTrail) {
+                trailPoints.push({ x: currentPoint.x, y: currentPoint.y });
+                if (trailPoints.length > maxTrailPoints) {
+                    trailPoints.shift();
+                }
+            }
+            
+            // 自动调整视图 - 更慢的缩放
+            if (currentPoint.x > 15) { // 从20降低到15
+                zoom = Math.min(8, 1 + currentPoint.x / 30); // 降低缩放速度
+                viewX = currentPoint.x / 3; // 降低视图移动速度
+            }
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = (timestamp - startTime) * animationSpeed;
+            animationProgress = Math.min(elapsed / animationDuration, 1);
+            
+            // 清空画布
+            ctx.fillStyle = 'rgba(10, 14, 39, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制坐标系
+            drawCoordinateSystem();
+            
+            // 绘制渐近线
+            drawAsymptote();
+            
+            // 绘制包络线
+            drawEnvelope();
+            
+            // 绘制函数曲线
+            drawFunctionCurve();
+            
+            // 绘制轨迹
+            drawTrail();
+            
+            // 更新当前点
+            updateCurrentPoint();
+            
+            // 绘制当前点
+            drawCurrentPoint();
+            
+            // 更新文本透明度 - 根据歌词时间戳调整
+            // "If I approach infinity" (00:40.00-00:41.00) - 更早出现
+            if (animationProgress > 0.0 && animationProgress <= 0.25) {
+                titleElement.style.opacity = (animationProgress - 0.0) / 0.25;
+            }
+            
+            // "Then you can be my LIMITATIONS" (00:41.00-00:42.50) - 更早出现
+            if (animationProgress > 0.25 && animationProgress <= 0.625) {
+                subtitleElement.style.opacity = (animationProgress - 0.25) / 0.375;
+            }
+            
+            // 显示数学公式 (00:42.50-00:44.00) - 更早出现
+            if (animationProgress > 0.625) {
+                formulaElement.style.opacity = (animationProgress - 0.625) / 0.375;
+            }
+            
+            // 继续动画或重新开始
+            if (animationProgress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // 动画结束后重新开始
+                setTimeout(() => {
+                    startTime = null;
+                    animationProgress = 0;
+                    currentPoint = { x: 0.1, y: 0 };
+                    targetPoint = { x: 0.1, y: 0 };
+                    trailPoints.length = 0;
+                    zoom = 1;
+                    viewX = 0;
+                    viewY = 0;
+                    titleElement.style.opacity = 0;
+                    subtitleElement.style.opacity = 0;
+                    formulaElement.style.opacity = 0;
+                    requestAnimationFrame(animate);
+                }, 2000);
+            }
+        }
+        
+        // 初始化默认值
+        currentFunctionType = 'sin-over-x';
+        animationSpeed = 1;
+        showTrail = true;
+        showAsymptote = true;
+        showEnvelope = true;
+        
+        // 初始化
+        updateFunctionInfo();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
