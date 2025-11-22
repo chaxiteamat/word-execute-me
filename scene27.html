@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 27: Challenging your god</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(circle at center, #0a0a1a 0%, #000 70%);
+            overflow: hidden;
+        }
+
+        .lyrics-container {
+            position: absolute;
+            top: 20%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .lyrics-line {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            opacity: 0;
+            transform: translateY(20px);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .lyrics-line.visible {
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        .lyrics-line.error {
+            color: #ff3860;
+            text-shadow: 0 0 15px #ff3860;
+        }
+
+        .terminal {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            opacity: 0;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .terminal.visible {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .terminal-title {
+            color: #ddd;
+        }
+
+        .terminal-buttons {
+            display: flex;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        .terminal-button.close {
+            background-color: #ff5f56;
+        }
+
+        .terminal-button.minimize {
+            background-color: #ffbd2e;
+        }
+
+        .terminal-button.maximize {
+            background-color: #27c93f;
+        }
+
+        .terminal-body {
+            height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .terminal-prompt {
+            color: #27c93f;
+        }
+
+        .terminal-command {
+            color: #ddd;
+        }
+
+        .terminal-output {
+            color: #ddd;
+        }
+
+        .terminal-error {
+            color: #ff3860;
+        }
+
+        .terminal-warning {
+            color: #ffbd2e;
+        }
+
+        .terminal-success {
+            color: #27c93f;
+        }
+
+        .code-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-width: 700px;
+            background-color: rgba(20, 20, 40, 0.9);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            opacity: 0;
+            box-shadow: 0 0 30px rgba(100, 100, 255, 0.3);
+            overflow: hidden;
+        }
+
+        .code-container.visible {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        .code-title {
+            color: #ddd;
+            font-size: 16px;
+        }
+
+        .code-close {
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .code-content {
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-line {
+            display: flex;
+            margin-bottom: 2px;
+        }
+
+        .line-number {
+            width: 30px;
+            color: #666;
+            text-align: right;
+            padding-right: 10px;
+            user-select: none;
+        }
+
+        .line-code {
+            flex: 1;
+        }
+
+        .code-keyword {
+            color: #c792ea;
+        }
+
+        .code-string {
+            color: #c3e88d;
+        }
+
+        .code-comment {
+            color: #546e7a;
+            font-style: italic;
+        }
+
+        .code-function {
+            color: #82aaff;
+        }
+
+        .code-variable {
+            color: #f07178;
+        }
+
+        .code-error {
+            background-color: rgba(255, 56, 96, 0.2);
+            border-left: 3px solid #ff3860;
+            padding-left: 10px;
+            margin-left: -10px;
+        }
+
+        .error-message {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 56, 96, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            opacity: 0;
+            box-shadow: 0 0 20px rgba(255, 56, 96, 0.5);
+        }
+
+        .error-message.visible {
+            animation: pulse 1s infinite;
+        }
+
+        .glitch-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .glitch-effect.active {
+            animation: glitch 0.3s infinite;
+        }
+
+        .completion-text {
+            position: absolute;
+            bottom: 5%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #ddd;
+            opacity: 0;
+        }
+
+        .completion-text.visible {
+            animation: fadeIn 2s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.05);
+            }
+            100% {
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1);
+            }
+        }
+
+        @keyframes glitch {
+            0% {
+                opacity: 0.1;
+                background: rgba(255, 0, 255, 0.1);
+            }
+            25% {
+                opacity: 0.2;
+                background: rgba(0, 255, 255, 0.1);
+            }
+            50% {
+                opacity: 0.1;
+                background: rgba(255, 255, 0, 0.1);
+            }
+            75% {
+                opacity: 0.2;
+                background: rgba(255, 0, 0, 0.1);
+            }
+            100% {
+                opacity: 0.1;
+                background: rgba(0, 0, 255, 0.1);
+            }
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 1s steps(40, end);
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="glitch-effect" id="glitchEffect"></div>
+        
+        <div class="lyrics-container">
+            <div class="lyrics-line" id="lyrics1">Challenging your god</div>
+            <div class="lyrics-line" id="lyrics2">You have made some ILLEGAL ARGUMENTS</div>
+        </div>
+
+        <div class="terminal" id="terminal">
+            <div class="terminal-header">
+                <div class="terminal-title">Terminal - root@universe:~</div>
+                <div class="terminal-buttons">
+                    <div class="terminal-button close"></div>
+                    <div class="terminal-button minimize"></div>
+                    <div class="terminal-button maximize"></div>
+                </div>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+                <!-- Terminal content will be added dynamically -->
+            </div>
+        </div>
+
+        <div class="code-container" id="codeContainer">
+            <div class="code-header">
+                <div class="code-title">divine_argument.js</div>
+                <div class="code-close">×</div>
+            </div>
+            <div class="code-content" id="codeContent">
+                <!-- Code content will be added dynamically -->
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            ERROR: Illegal argument detected in divine protocol
+        </div>
+
+        <div class="completion-text" id="completionText">
+            The system rejects invalid arguments...
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lyrics1 = document.getElementById('lyrics1');
+            const lyrics2 = document.getElementById('lyrics2');
+            const terminal = document.getElementById('terminal');
+            const terminalBody = document.getElementById('terminalBody');
+            const codeContainer = document.getElementById('codeContainer');
+            const codeContent = document.getElementById('codeContent');
+            const errorMessage = document.getElementById('errorMessage');
+            const completionText = document.getElementById('completionText');
+            const glitchEffect = document.getElementById('glitchEffect');
+
+            // Terminal commands and outputs
+            const terminalSequence = [
+                { type: 'prompt', text: '$' },
+                { type: 'command', text: ' sudo access_divine_realm' },
+                { type: 'output', text: 'Authentication required...' },
+                { type: 'output', text: 'Enter divine credentials:' },
+                { type: 'prompt', text: 'password: ********' },
+                { type: 'output', text: 'Access granted. Welcome to the divine realm.' },
+                { type: 'prompt', text: '$' },
+                { type: 'command', text: ' query --entity="god" --argument="challenge"' },
+                { type: 'error', text: 'ERROR: Illegal argument detected in divine protocol' },
+                { type: 'warning', text: 'WARNING: Challenging divine entities is prohibited by cosmic law' },
+                { type: 'output', text: 'Searching for valid arguments...' },
+                { type: 'output', text: 'Found 0 valid arguments.' },
+                { type: 'error', text: 'CRITICAL: System integrity compromised' },
+                { type: 'prompt', text: '$' }
+            ];
+
+            // Code content with error
+            const codeLines = [
+                { number: 1, code: '<span class="code-comment">// Attempting to challenge divine authority</span>' },
+                { number: 2, code: '<span class="code-keyword">function</span> <span class="code-function">challengeGod</span>(<span class="code-variable">arguments</span>) {' },
+                { number: 3, code: '  <span class="code-keyword">const</span> <span class="code-variable">divineProtocol</span> = <span class="code-string">"unbreakable"</span>;' },
+                { number: 4, code: '  <span class="code-keyword">const</span> <span class="code-variable">userArguments</span> = <span class="code-variable">arguments</span>;' },
+                { number: 5, code: '' },
+                { number: 6, code: '  <span class="code-keyword">if</span> (<span class="code-function">validateArguments</span>(<span class="code-variable">userArguments</span>)) {' },
+                { number: 7, code: '    <span class="code-keyword">return</span> <span class="code-string">"Challenge accepted"</span>;' },
+                { number: 8, code: '  } <span class="code-keyword">else</span> {' },
+                { number: 9, code: '    <span class="code-function">throw</span> <span class="code-keyword">new</span> <span class="code-function">Error</span>(<span class="code-string">"ILLEGAL ARGUMENTS"</span>);' },
+                { number: 10, code: '  }' },
+                { number: 11, code: '}' },
+                { number: 12, code: '' },
+                { number: 13, code: '<span class="code-keyword">function</span> <span class="code-function">validateArguments</span>(<span class="code-variable">args</span>) {' },
+                { number: 14, code: '  <span class="code-comment">// All arguments against divine authority are invalid</span>' },
+                { number: 15, code: '  <span class="code-keyword">return</span> <span class="code-keyword">false</span>;' },
+                { number: 16, code: '}' },
+                { number: 17, code: '' },
+                { number: 18, code: '<span class="code-comment">// Execution attempt</span>' },
+                { number: 19, code: '<span class="code-keyword">try</span> {' },
+                { number: 20, code: '  <span class="code-function">challengeGod</span>([<span class="code-string">"You are not infallible"</span>, <span class="code-string">"Your logic is flawed"</span>]);' },
+                { number: 21, code: '} <span class="code-keyword">catch</span> (<span class="code-variable">error</span>) {' },
+                { number: 22, code: '  <span class="code-function">console</span>.<span class="code-function">error</span>(<span class="code-variable">error</span>.<span class="code-variable">message</span>);' },
+                { number: 23, code: '  <span class="code-comment">// System crash imminent</span>' },
+                { number: 24, code: '}' }
+            ];
+
+            // Animation timeline
+            setTimeout(() => {
+                lyrics1.classList.add('visible');
+            }, 250);
+
+            setTimeout(() => {
+                lyrics2.classList.add('visible');
+                lyrics2.classList.add('error');
+            }, 1000);
+
+            setTimeout(() => {
+                terminal.classList.add('visible');
+                animateTerminal();
+            }, 2000);
+
+            setTimeout(() => {
+                codeContainer.classList.add('visible');
+                animateCode();
+            }, 4000);
+
+            setTimeout(() => {
+                errorMessage.classList.add('visible');
+                glitchEffect.classList.add('active');
+            }, 6000);
+
+            setTimeout(() => {
+                completionText.classList.add('visible');
+            }, 7500);
+
+            // Animate terminal
+            function animateTerminal() {
+                let lineIndex = 0;
+                
+                function addLine() {
+                    if (lineIndex < terminalSequence.length) {
+                        const line = terminalSequence[lineIndex];
+                        const lineElement = document.createElement('div');
+                        lineElement.className = `terminal-line terminal-${line.type}`;
+                        
+                        if (line.type === 'prompt') {
+                            lineElement.textContent = line.text;
+                        } else if (line.type === 'command') {
+                            lineElement.textContent = line.text;
+                            lineElement.classList.add('typing-effect');
+                        } else {
+                            lineElement.textContent = line.text;
+                        }
+                        
+                        terminalBody.appendChild(lineElement);
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                        
+                        lineIndex++;
+                        setTimeout(addLine, line.type === 'command' ? 750 : 250);
+                    }
+                }
+                
+                addLine();
+            }
+
+            // Animate code
+            function animateCode() {
+                codeLines.forEach((line, index) => {
+                    setTimeout(() => {
+                        const lineElement = document.createElement('div');
+                        lineElement.className = 'code-line';
+                        
+                        if (index === 9) { // Highlight the error line
+                            lineElement.classList.add('code-error');
+                        }
+                        
+                        const lineNumberElement = document.createElement('div');
+                        lineNumberElement.className = 'line-number';
+                        lineNumberElement.textContent = line.number;
+                        
+                        const lineCodeElement = document.createElement('div');
+                        lineCodeElement.className = 'line-code';
+                        lineCodeElement.innerHTML = line.code;
+                        
+                        lineElement.appendChild(lineNumberElement);
+                        lineElement.appendChild(lineCodeElement);
+                        
+                        codeContent.appendChild(lineElement);
+                    }, index * 50);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
