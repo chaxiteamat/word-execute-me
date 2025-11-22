@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 13: Then I can / Then I can be your only SATISFACTION</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .satisfaction-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 0.5s;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        .progress-ring-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.058s ease; // 再加快3倍速度（总共6倍）
+            stroke: #fff;
+            stroke-width: 4;
+            fill: transparent;
+        }
+
+        .progress-ring-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 4;
+            fill: transparent;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .satisfaction-level {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+            z-index: 3;
+        }
+
+        .level-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            min-width: 200px;
+        }
+
+        .level-value {
+            color: #0f0;
+            font-weight: bold;
+        }
+
+        .satisfaction-visual {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            z-index: 3;
+        }
+
+        .satisfaction-meter {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .satisfaction-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #333, #fff);
+            transition: width 0.05s ease; // 再加快3倍速度（总共6倍）
+        }
+
+        .satisfaction-label {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .satisfaction-emotions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .emotion {
+            font-size: 1.2rem;
+            opacity: 0.3;
+            transition: opacity 0.05s ease; // 再加快3倍速度（总共6倍）
+        }
+
+        .emotion.active {
+            opacity: 1;
+        }
+
+        .feedback-loop {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 100px;
+            z-index: 3;
+        }
+
+        .heartbeat-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-container {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            z-index: 3;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #fff;
+            transition: width 0.05s ease; // 再加快3倍速度（总共6倍）
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas class="satisfaction-canvas" id="satisfactionCanvas"></canvas>
+        
+        <div class="content">
+            <h1 class="title">Then I can / Then I can be your only SATISFACTION</h1>
+            
+            <div class="progress-ring-container">
+                <svg class="progress-ring" width="200" height="200">
+                    <circle class="progress-ring-bg" cx="100" cy="100" r="90"></circle>
+                    <circle class="progress-ring-circle" id="progressCircle" cx="100" cy="100" r="90"></circle>
+                </svg>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+        </div>
+        
+        <div class="satisfaction-level">
+            <div class="level-item">
+                <span>Satisfaction:</span>
+                <span class="level-value" id="satisfactionValue">0%</span>
+            </div>
+            <div class="level-item">
+                <span>Completion:</span>
+                <span class="level-value" id="completionValue">0%</span>
+            </div>
+            <div class="level-item">
+                <span>Feedback:</span>
+                <span class="level-value" id="feedbackValue">0</span>
+            </div>
+        </div>
+        
+        <div class="satisfaction-visual">
+            <div class="satisfaction-label">SATISFACTION LEVEL</div>
+            <div class="satisfaction-meter">
+                <div class="satisfaction-fill" id="satisfactionFill"></div>
+            </div>
+            <div class="satisfaction-emotions">
+                <span class="emotion" id="emotion1">😐</span>
+                <span class="emotion" id="emotion2">🙂</span>
+                <span class="emotion" id="emotion3">😊</span>
+                <span class="emotion" id="emotion4">😄</span>
+                <span class="emotion" id="emotion5">🤩</span>
+            </div>
+        </div>
+        
+        <div class="feedback-loop">
+            <canvas class="heartbeat-canvas" id="heartbeatCanvas"></canvas>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const satisfactionCanvas = document.getElementById('satisfactionCanvas');
+            const satisfactionCtx = satisfactionCanvas.getContext('2d');
+            
+            const heartbeatCanvas = document.getElementById('heartbeatCanvas');
+            const heartbeatCtx = heartbeatCanvas.getContext('2d');
+            
+            // 设置画布大小
+            function resizeCanvas() {
+                satisfactionCanvas.width = window.innerWidth;
+                satisfactionCanvas.height = window.innerHeight;
+                
+                heartbeatCanvas.width = 300;
+                heartbeatCanvas.height = 100;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 进度环参数
+            const progressCircle = document.getElementById('progressCircle');
+            const progressText = document.getElementById('progressText');
+            const radius = progressCircle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            
+            progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+            progressCircle.style.strokeDashoffset = circumference;
+            
+            function setProgress(percent) {
+                const offset = circumference - (percent / 100) * circumference;
+                progressCircle.style.strokeDashoffset = offset;
+                progressText.textContent = `${Math.floor(percent)}%`;
+                
+                // 更新满足度指标
+                document.getElementById('satisfactionValue').textContent = `${Math.floor(percent)}%`;
+                document.getElementById('completionValue').textContent = `${Math.floor(percent * 0.8)}%`;
+                document.getElementById('feedbackValue').textContent = Math.floor(percent / 10);
+                
+                // 更新满足度可视化
+                document.getElementById('satisfactionFill').style.width = percent + '%';
+                
+                // 根据满足度更新表情
+                updateEmotions(percent);
+            }
+            
+            function updateEmotions(percent) {
+                // 重置所有表情
+                for (let i = 1; i <= 5; i++) {
+                    document.getElementById(`emotion${i}`).classList.remove('active');
+                }
+                
+                // 根据百分比激活对应的表情
+                if (percent > 0) document.getElementById('emotion1').classList.add('active');
+                if (percent > 20) document.getElementById('emotion2').classList.add('active');
+                if (percent > 40) document.getElementById('emotion3').classList.add('active');
+                if (percent > 60) document.getElementById('emotion4').classList.add('active');
+                if (percent > 80) document.getElementById('emotion5').classList.add('active');
+            }
+            
+            // 反馈回路粒子系统
+            const particles = [];
+            const maxParticles = 100;
+            
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    this.x = Math.random() * satisfactionCanvas.width;
+                    this.y = Math.random() * satisfactionCanvas.height;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedX = (Math.random() - 0.5) * 12; // 再加快3倍速度（总共6倍）
+                    this.speedY = (Math.random() - 0.5) * 12; // 再加快3倍速度（总共6倍）
+                    this.opacity = Math.random() * 0.5 + 0.5;
+                    this.color = `rgba(255, 255, 255, ${this.opacity})`;
+                }
+                
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    // 边界检测
+                    if (this.x < 0 || this.x > satisfactionCanvas.width) {
+                        this.speedX *= -1;
+                    }
+                    if (this.y < 0 || this.y > satisfactionCanvas.height) {
+                        this.speedY *= -1;
+                    }
+                    
+                    // 向中心移动 - 再加快3倍速度（总共6倍）
+                    const centerX = satisfactionCanvas.width / 2;
+                    const centerY = satisfactionCanvas.height / 2;
+                    const dx = centerX - this.x;
+                    const dy = centerY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 200) {
+                        this.speedX += dx * 0.0006; // 再加快3倍速度（总共6倍）
+                        this.speedY += dy * 0.0006; // 再加快3倍速度（总共6倍）
+                    }
+                }
+                
+                draw() {
+                    satisfactionCtx.fillStyle = this.color;
+                    satisfactionCtx.beginPath();
+                    satisfactionCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    satisfactionCtx.fill();
+                }
+            }
+            
+            // 初始化粒子
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push(new Particle());
+            }
+            
+            // 绘制连接线
+            function drawConnections() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 100) {
+                            satisfactionCtx.strokeStyle = `rgba(255, 255, 255, ${0.2 * (1 - distance / 100)})`;
+                            satisfactionCtx.lineWidth = 0.5;
+                            satisfactionCtx.beginPath();
+                            satisfactionCtx.moveTo(particles[i].x, particles[i].y);
+                            satisfactionCtx.lineTo(particles[j].x, particles[j].y);
+                            satisfactionCtx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            // 心跳波形
+            let heartbeatData = [];
+            let heartbeatIndex = 0;
+            
+            function initHeartbeatData() {
+                for (let i = 0; i < 300; i++) {
+                    heartbeatData.push(0);
+                }
+            }
+            
+            function updateHeartbeat() {
+                // 生成心跳波形 - 再加快3倍速度（总共6倍）
+                const time = Date.now() / 1000;
+                const value = Math.sin(time * 30) * Math.exp(-Math.pow((time % 0.1667) - 0.0167, 2) * 300); // 再加快3倍速度（总共6倍）
+                
+                heartbeatData[heartbeatIndex] = value * 50 + 50; // 缩放到0-100范围
+                heartbeatIndex = (heartbeatIndex + 1) % heartbeatData.length;
+            }
+            
+            function drawHeartbeat() {
+                heartbeatCtx.clearRect(0, 0, heartbeatCanvas.width, heartbeatCanvas.height);
+                heartbeatCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                heartbeatCtx.lineWidth = 2;
+                heartbeatCtx.beginPath();
+                
+                for (let i = 0; i < heartbeatData.length; i++) {
+                    const x = (i / heartbeatData.length) * heartbeatCanvas.width;
+                    const y = heartbeatCanvas.height - (heartbeatData[i] / 100) * heartbeatCanvas.height;
+                    
+                    if (i === 0) {
+                        heartbeatCtx.moveTo(x, y);
+                    } else {
+                        heartbeatCtx.lineTo(x, y);
+                    }
+                }
+                
+                heartbeatCtx.stroke();
+            }
+            
+            // 动画循环
+            let progress = 0;
+            let satisfactionWords = [
+                "渴望", "期待", "满足", "愉悦", "狂喜"
+            ];
+            
+            function animate() {
+                // 清除画布
+                satisfactionCtx.clearRect(0, 0, satisfactionCanvas.width, satisfactionCanvas.height);
+                
+                // 更新和绘制粒子
+                for (const particle of particles) {
+                    particle.update();
+                    particle.draw();
+                }
+                
+                // 绘制连接线
+                drawConnections();
+                
+                // 更新进度 - 再加快3倍速度（总共6倍）
+                progress += 100 / 500; // 0.5秒完成（原来3秒）
+                if (progress >= 100) {
+                    progress = 100;
+                }
+                setProgress(progress);
+                
+                // 绘制满足度文字
+                drawSatisfactionWords(progress);
+                
+                // 更新心跳
+                updateHeartbeat();
+                drawHeartbeat();
+                
+                // 更新进度条
+                document.getElementById('progressBar').style.width = progress + '%';
+                
+                requestAnimationFrame(animate);
+            }
+            
+            function drawSatisfactionWords(progress) {
+                const wordIndex = Math.floor(progress / 20); // 每20%换一个词
+                if (wordIndex >= 0 && wordIndex < satisfactionWords.length) {
+                    const word = satisfactionWords[wordIndex];
+                    const opacity = (progress % 20) / 20; // 渐变效果
+                    
+                    satisfactionCtx.save();
+                    satisfactionCtx.font = 'bold 24px Courier New';
+                    satisfactionCtx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                    satisfactionCtx.textAlign = 'center';
+                    satisfactionCtx.fillText(word, satisfactionCanvas.width / 2, satisfactionCanvas.height / 2 + 150);
+                    satisfactionCtx.restore();
+                }
+            }
+            
+            // 初始化
+            initHeartbeatData();
+            animate();
+        });
+    </script>
+</body>
+</html>
