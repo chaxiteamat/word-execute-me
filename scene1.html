@@ -77,7 +77,8 @@
     </div>
     
     <div class="scene-title">
-        <p>电源启动与安全防护</p>
+        <p>Switch on the power line</p>
+        <p>Remember to put on PROTECTION</p>
     </div>
     
     <div class="controls">
@@ -127,10 +128,7 @@
         const powerSwitch = {
             x: canvas.width / 2,
             y: canvas.height / 2,
-            width: 80,
-            height: 40,
-            isOn: false,
-            switchAngle: 0
+            isOn: false
         };
         
         // 绝缘护具参数
@@ -304,112 +302,70 @@
             ctx.globalAlpha = 1;
         }
         
-        // 绘制电源开关
+        // 绘制拉杆开关
         function drawPowerSwitch(progress) {
-            const x = powerSwitch.x;
-            const y = powerSwitch.y;
-            const width = powerSwitch.width || 80;
-            const height = powerSwitch.height || 40;
-            
             // 根据进度计算开关状态
             if (progress > 0.5) {
                 powerSwitch.isOn = true;
-                powerSwitch.switchAngle = Math.min(1, (progress - 0.5) * 2);
             }
             
-            // 绘制开关底座
-            ctx.fillStyle = '#222';
-            ctx.fillRect(x - width/2 - 5, y - height/2 - 5, width + 10, height + 10);
+            const ctx = canvas.getContext('2d');
             
-            // 绘制船型开关主体
+            // 保存当前状态
             ctx.save();
-            ctx.translate(x, y);
             
-            // 船型开关底座
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.roundRect(-width/2, -height/2, width, height, height/2);
-            ctx.fill();
+            // 计算开关位置
+            const baseX = powerSwitch.x;
+            const baseY = powerSwitch.y;
+            const trackWidth = 120; // 轨道宽度
+            const trackHeight = 30; // 轨道高度
+            const sliderWidth = 40; // 滑块宽度
+            const sliderHeight = 20; // 滑块高度
             
-            // 船型开关按钮
-            const buttonWidth = width * 0.8;
-            const buttonHeight = height * 0.7;
-            const maxAngle = Math.PI / 6; // 最大倾斜角度（30度）
-            const currentAngle = powerSwitch.isOn ? maxAngle * powerSwitch.switchAngle : -maxAngle * (1 - powerSwitch.switchAngle);
+            // 计算滑块位置（关闭时在左侧，开启时在右侧）
+            const sliderOffset = powerSwitch.isOn ? trackWidth/2 - sliderWidth/2 : -trackWidth/2 + sliderWidth/2;
             
-            ctx.save();
-            ctx.rotate(currentAngle);
+            // 绘制开关轨道
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(baseX - trackWidth/2, baseY - trackHeight/2, trackWidth, trackHeight);
             
-            // 按钮渐变
-            const gradient = ctx.createLinearGradient(0, -buttonHeight/2, 0, buttonHeight/2);
+            // 绘制轨道内部凹陷
+            ctx.fillStyle = '#1a252f';
+            ctx.fillRect(baseX - trackWidth/2 + 3, baseY - trackHeight/2 + 3, trackWidth - 6, trackHeight - 6);
             
-            if (powerSwitch.isOn) {
-                // 开启状态 - 白色发光
-                gradient.addColorStop(0, '#fff');
-                gradient.addColorStop(0.5, '#eee');
-                gradient.addColorStop(1, '#ccc');
-            } else {
-                // 关闭状态 - 灰色
-                gradient.addColorStop(0, '#666');
-                gradient.addColorStop(0.5, '#555');
-                gradient.addColorStop(1, '#444');
-            }
+            // 绘制轨道高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillRect(baseX - trackWidth/2 + 3, baseY - trackHeight/2 + 3, trackWidth - 6, 5);
             
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.roundRect(-buttonWidth/2, -buttonHeight/2, buttonWidth, buttonHeight, buttonHeight/2);
-            ctx.fill();
+            // 绘制滑块
+            const sliderGradient = ctx.createLinearGradient(
+                baseX + sliderOffset - sliderWidth/2, baseY - sliderHeight/2,
+                baseX + sliderOffset - sliderWidth/2, baseY + sliderHeight/2
+            );
+            sliderGradient.addColorStop(0, '#95a5a6');
+            sliderGradient.addColorStop(0.5, '#7f8c8d');
+            sliderGradient.addColorStop(1, '#6c7a7d');
             
-            // 按钮边框
-            ctx.strokeStyle = powerSwitch.isOn ? '#fff' : '#666';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.fillStyle = sliderGradient;
+            ctx.fillRect(baseX + sliderOffset - sliderWidth/2, baseY - sliderHeight/2, sliderWidth, sliderHeight);
             
-            // 按钮高光效果
-            ctx.fillStyle = powerSwitch.isOn ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)';
-            ctx.beginPath();
-            ctx.roundRect(-buttonWidth/2 + 5, -buttonHeight/2 + 3, buttonWidth - 10, buttonHeight/3, buttonHeight/6);
-            ctx.fill();
+            // 绘制滑块高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(baseX + sliderOffset - sliderWidth/2, baseY - sliderHeight/2, sliderWidth, 5);
             
-            ctx.restore();
+            // 绘制滑块边框
+            ctx.strokeStyle = '#5a6a6d';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(baseX + sliderOffset - sliderWidth/2, baseY - sliderHeight/2, sliderWidth, sliderHeight);
             
-            // 发光效果
-            if (powerSwitch.isOn && powerSwitch.switchAngle > 0.5) {
-                ctx.save();
-                ctx.globalAlpha = powerSwitch.switchAngle * 0.5;
-                ctx.shadowBlur = 20 * powerSwitch.switchAngle;
-                ctx.shadowColor = '#fff';
-                
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.roundRect(-buttonWidth/2, -buttonHeight/2, buttonWidth, buttonHeight, buttonHeight/2);
-                ctx.fill();
-                
-                ctx.restore();
-            }
+            // 绘制状态标记
+            ctx.fillStyle = '#ecf0f1';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('OFF', baseX - trackWidth/3, baseY + trackHeight/2 + 15);
+            ctx.fillText('ON', baseX + trackWidth/3, baseY + trackHeight/2 + 15);
             
-            // 状态指示灯
-            const lightX = width/2 + 15;
-            const lightY = 0;
-            
-            ctx.beginPath();
-            ctx.arc(lightX, lightY, 6, 0, Math.PI * 2);
-            ctx.fillStyle = powerSwitch.isOn ? '#fff' : '#333';
-            ctx.fill();
-            
-            if (powerSwitch.isOn) {
-                // 指示灯发光效果
-                ctx.save();
-                ctx.globalAlpha = powerSwitch.switchAngle;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#fff';
-                ctx.beginPath();
-                ctx.arc(lightX, lightY, 4, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                ctx.restore();
-            }
-            
+            // 恢复状态
             ctx.restore();
         }
         
@@ -627,7 +583,6 @@
             currentTime = 0;
             startTime = null;
             powerSwitch.isOn = false;
-            powerSwitch.switchAngle = 0;
             protection.opacity = 0;
             protection.warningOpacity = 0;
             electricCurrent.paths.forEach(path => path.active = false);
