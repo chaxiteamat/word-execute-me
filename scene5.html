@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Execute Me - Scene 5</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #title {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2.8rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="title">world.execute(me);</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const titleElement = document.getElementById('title');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画参数
+        let animationTime = 0;
+        const animationDuration = 2500; // 2.5秒动画时长，匹配时间戳00:29.00-00:31.00
+        let startTime = null;
+        
+        // 粒子系统
+        const particles = [];
+        const maxParticles = 50;
+        
+        // 代码执行流程图
+        const executionFlow = {
+            nodes: [
+                { id: 'start', x: 150, y: 120, label: 'main()', active: false, pulsePhase: 0 },
+                { id: 'init', x: 300, y: 120, label: 'init()', active: false, pulsePhase: 0 },
+                { id: 'alloc', x: 450, y: 120, label: 'alloc()', active: false, pulsePhase: 0 },
+                { id: 'process', x: 600, y: 120, label: 'process()', active: false, pulsePhase: 0 },
+                { id: 'free', x: 450, y: 250, label: 'free()', active: false, pulsePhase: 0 },
+                { id: 'end', x: 300, y: 250, label: 'exit()', active: false, pulsePhase: 0 }
+            ],
+            connections: [
+                { from: 'start', to: 'init', active: false, progress: 0 },
+                { from: 'init', to: 'alloc', active: false, progress: 0 },
+                { from: 'alloc', to: 'process', active: false, progress: 0 },
+                { from: 'process', to: 'free', active: false, progress: 0 },
+                { from: 'free', to: 'end', active: false, progress: 0 }
+            ]
+        };
+        
+        // 内存块 - 改进为3D堆叠效果
+        const memoryBlocks = [];
+        const maxMemoryBlocks = 20;
+        const memoryLayers = 3; // 3层堆叠
+        
+        // CPU使用率数据
+        const cpuUsage = [];
+        const maxCpuDataPoints = 60;
+        
+        // CPU核心可视化
+        const cpuCores = [];
+        const numCores = 4;
+        
+        // 初始化粒子
+        function initParticles() {
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    speedY: (Math.random() - 0.5) * 0.5,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+        
+        // 初始化内存块 - 3D堆叠效果
+        function initMemoryBlocks() {
+            for (let i = 0; i < maxMemoryBlocks; i++) {
+                const layer = Math.floor(i / (maxMemoryBlocks / memoryLayers));
+                const indexInLayer = i % Math.ceil(maxMemoryBlocks / memoryLayers);
+                
+                memoryBlocks.push({
+                    x: 100 + (indexInLayer % 5) * 120, // 减小水平间距
+                    y: 400 + (indexInLayer % 3) * 60 - layer * 15, // 减小垂直间距
+                    z: layer * 10, // Z轴深度
+                    width: 90, // 减小宽度
+                    height: 35, // 减小高度
+                    allocated: false,
+                    opacity: 0,
+                    scale: 0.8,
+                    allocationTime: 0,
+                    layer: layer,
+                    memorySize: Math.floor(Math.random() * 64 + 16) + 'MB' // 随机内存大小
+                });
+            }
+        }
+        
+        // 初始化CPU核心
+        function initCpuCores() {
+            for (let i = 0; i < numCores; i++) {
+                cpuCores.push({
+                    id: i,
+                    usage: 0,
+                    targetUsage: 0,
+                    x: 0,
+                    y: 0,
+                    radius: 30,
+                    color: `hsl(${200 + i * 20}, 70%, 50%)`
+                });
+            }
+        }
+        
+        // 初始化CPU数据
+        function initCpuData() {
+            for (let i = 0; i < maxCpuDataPoints; i++) {
+                cpuUsage.push(0);
+            }
+        }
+        
+        // 更新粒子
+        function updateParticles() {
+            particles.forEach(particle => {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                
+                // 边界检测
+                if (particle.x < 0 || particle.x > canvas.width) {
+                    particle.speedX *= -1;
+                }
+                if (particle.y < 0 || particle.y > canvas.height) {
+                    particle.speedY *= -1;
+                }
+            });
+        }
+        
+        // 绘制粒子
+        function drawParticles() {
+            particles.forEach(particle => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // 绘制代码执行流程图
+        function drawExecutionFlow(progress) {
+            const nodeIndex = Math.floor(progress * executionFlow.nodes.length);
+            const connectionProgress = (progress * executionFlow.nodes.length) % 1;
+            
+            // 绘制连接线
+            executionFlow.connections.forEach((conn, index) => {
+                const fromNode = executionFlow.nodes.find(n => n.id === conn.from);
+                const toNode = executionFlow.nodes.find(n => n.id === conn.to);
+                
+                if (fromNode && toNode) {
+                    const isActive = index < nodeIndex || (index === nodeIndex && connectionProgress > 0);
+                    
+                    if (isActive) {
+                        // 计算连接线进度
+                        const lineProgress = index < nodeIndex ? 1 : connectionProgress;
+                        
+                        // 绘制连接线发光效果
+                        ctx.strokeStyle = `rgba(100, 200, 255, ${0.3 + lineProgress * 0.4})`;
+                        ctx.lineWidth = 3 + lineProgress * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(fromNode.x + 40, fromNode.y + 20);
+                        ctx.lineTo(toNode.x + 40, toNode.y + 20);
+                        ctx.stroke();
+                        
+                        // 绘制数据流动画
+                        if (lineProgress > 0 && lineProgress < 1) {
+                            const dataX = fromNode.x + 40 + (toNode.x - fromNode.x) * lineProgress;
+                            const dataY = fromNode.y + 20 + (toNode.y - fromNode.y) * lineProgress;
+                            
+                            ctx.fillStyle = 'rgba(100, 200, 255, 0.8)';
+                            ctx.beginPath();
+                            ctx.arc(dataX, dataY, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    } else {
+                        // 未激活的连接线
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath();
+                        ctx.moveTo(fromNode.x + 40, fromNode.y + 20);
+                        ctx.lineTo(toNode.x + 40, toNode.y + 20);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                }
+            });
+            
+            // 绘制节点
+            executionFlow.nodes.forEach((node, index) => {
+                const isActive = index <= nodeIndex;
+                const isCurrent = index === nodeIndex;
+                
+                // 更新脉冲相位
+                if (isActive) {
+                    node.pulsePhase += 0.05;
+                }
+                
+                // 节点发光效果
+                if (isActive) {
+                    const glowSize = 15 + Math.sin(node.pulsePhase) * 5;
+                    const gradient = ctx.createRadialGradient(
+                        node.x + 40, node.y + 20, 0,
+                        node.x + 40, node.y + 20, glowSize
+                    );
+                    gradient.addColorStop(0, 'rgba(100, 200, 255, 0.8)');
+                    gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(node.x - glowSize + 40, node.y - glowSize + 20, 
+                                80 + glowSize * 2, 40 + glowSize * 2);
+                }
+                
+                // 节点背景
+                ctx.fillStyle = isActive ? 
+                    'rgba(30, 40, 60, 0.9)' : 
+                    'rgba(20, 20, 20, 0.7)';
+                
+                ctx.fillRect(node.x, node.y, 80, 40);
+                
+                // 节点边框
+                ctx.strokeStyle = isActive ? 
+                    'rgba(100, 200, 255, 1)' : 
+                    'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = isActive ? 2 : 1;
+                ctx.strokeRect(node.x, node.y, 80, 40);
+                
+                // 节点文本
+                ctx.fillStyle = isActive ? 
+                    'rgba(255, 255, 255, 1)' : 
+                    'rgba(255, 255, 255, 0.5)';
+                ctx.font = isActive ? 'bold 14px Courier New' : '14px Courier New';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.label, node.x + 40, node.y + 20);
+                
+                // 当前节点高亮
+                if (isCurrent) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(node.x - 2, node.y - 2, 84, 44);
+                }
+            });
+        }
+        
+        // 绘制3D内存块
+        function drawMemoryBlocks(progress) {
+            const allocatedCount = Math.floor(progress * maxMemoryBlocks);
+            
+            // 按层级排序，先绘制底层
+            const sortedBlocks = [...memoryBlocks].sort((a, b) => a.layer - b.layer);
+            
+            sortedBlocks.forEach((block, index) => {
+                const isAllocated = index < allocatedCount;
+                
+                // 更新分配状态
+                block.allocated = isAllocated;
+                
+                // 更新透明度和缩放
+                if (isAllocated) {
+                    if (block.opacity < 1) {
+                        block.opacity += 0.05;
+                    }
+                    if (block.scale < 1) {
+                        block.scale += 0.02;
+                    }
+                    block.allocationTime += 0.05;
+                } else {
+                    if (block.opacity > 0.2) {
+                        block.opacity -= 0.02;
+                    }
+                    if (block.scale > 0.8) {
+                        block.scale -= 0.01;
+                    }
+                }
+                
+                // 计算实际尺寸和位置（考虑3D效果）
+                const actualWidth = block.width * block.scale;
+                const actualHeight = block.height * block.scale;
+                const offsetX = (block.width - actualWidth) / 2;
+                const offsetY = (block.height - actualHeight) / 2;
+                
+                // 3D效果：根据层级调整位置和大小
+                const perspectiveScale = 1 - block.layer * 0.05;
+                const perspectiveX = block.x + block.layer * 5;
+                const perspectiveY = block.y - block.layer * 10;
+                const perspectiveWidth = actualWidth * perspectiveScale;
+                const perspectiveHeight = actualHeight * perspectiveScale;
+                
+                // 内存块发光效果
+                if (block.allocated) {
+                    const glowSize = 5 + Math.sin(block.allocationTime) * 2;
+                    const gradient = ctx.createRadialGradient(
+                        perspectiveX + block.width/2, perspectiveY + block.height/2, 0,
+                        perspectiveX + block.width/2, perspectiveY + block.height/2, glowSize + 20
+                    );
+                    gradient.addColorStop(0, `rgba(100, 200, 255, ${block.opacity * 0.3})`);
+                    gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(perspectiveX - glowSize + offsetX, perspectiveY - glowSize + offsetY, 
+                                perspectiveWidth + glowSize * 2, perspectiveHeight + glowSize * 2);
+                }
+                
+                // 绘制内存块顶面
+                ctx.fillStyle = block.allocated ? 
+                    `rgba(40, 60, 100, ${block.opacity})` : 
+                    `rgba(40, 40, 40, ${block.opacity * 0.7})`;
+                
+                ctx.fillRect(perspectiveX + offsetX, perspectiveY + offsetY, perspectiveWidth, perspectiveHeight);
+                
+                // 绘制内存块侧面（3D效果）
+                if (block.allocated) {
+                    // 右侧面
+                    ctx.fillStyle = `rgba(30, 50, 80, ${block.opacity * 0.8})`;
+                    ctx.beginPath();
+                    ctx.moveTo(perspectiveX + offsetX + perspectiveWidth, perspectiveY + offsetY);
+                    ctx.lineTo(perspectiveX + offsetX + perspectiveWidth + 10, perspectiveY + offsetY - 10);
+                    ctx.lineTo(perspectiveX + offsetX + perspectiveWidth + 10, perspectiveY + offsetY + perspectiveHeight - 10);
+                    ctx.lineTo(perspectiveX + offsetX + perspectiveWidth, perspectiveY + offsetY + perspectiveHeight);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 顶面
+                    ctx.fillStyle = `rgba(50, 70, 110, ${block.opacity * 0.9})`;
+                    ctx.beginPath();
+                    ctx.moveTo(perspectiveX + offsetX, perspectiveY + offsetY);
+                    ctx.lineTo(perspectiveX + offsetX + 10, perspectiveY + offsetY - 10);
+                    ctx.lineTo(perspectiveX + offsetX + perspectiveWidth + 10, perspectiveY + offsetY - 10);
+                    ctx.lineTo(perspectiveX + offsetX + perspectiveWidth, perspectiveY + offsetY);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                // 内存块边框
+                ctx.strokeStyle = block.allocated ? 
+                    `rgba(100, 200, 255, ${block.opacity})` : 
+                    `rgba(100, 100, 100, ${block.opacity * 0.5})`;
+                ctx.lineWidth = block.allocated ? 2 : 1;
+                ctx.strokeRect(perspectiveX + offsetX, perspectiveY + offsetY, perspectiveWidth, perspectiveHeight);
+                
+                // 内存块标签和大小
+                if (block.allocated) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${block.opacity})`;
+                    ctx.font = 'bold 12px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(block.memorySize, perspectiveX + block.width/2, perspectiveY + block.height/2 - 5);
+                    
+                    ctx.font = '10px Courier New';
+                    ctx.fillText('ALLOC', perspectiveX + block.width/2, perspectiveY + block.height/2 + 8);
+                }
+            });
+        }
+        
+        // 绘制增强的CPU使用率图表
+        function drawCpuChart(progress) {
+            const chartX = 750; // 向右移动
+            const chartY = 350; // 向下移动，避免被标题覆盖
+            const chartWidth = 320; // 减小宽度
+            const chartHeight = 150; // 减小高度
+            
+            // 绘制图表背景
+            ctx.fillStyle = 'rgba(20, 25, 35, 0.8)';
+            ctx.fillRect(chartX, chartY, chartWidth, chartHeight);
+            
+            // 绘制图表边框
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(chartX, chartY, chartWidth, chartHeight);
+            
+            // 绘制网格线
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = chartY + (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(chartX, y);
+                ctx.lineTo(chartX + chartWidth, y);
+                ctx.stroke();
+            }
+            
+            // 更新CPU数据 - 减慢更新频率
+            if (progress > 0.2) {
+                // 降低更新频率，从每帧更新改为每3帧更新一次
+                if (Math.floor(animationTime / 50) % 3 === 0) {
+                    const newUsage = 30 + Math.random() * 40 + Math.sin(animationTime / 500) * 15; // 减慢正弦波变化速度
+                    cpuUsage.shift();
+                    cpuUsage.push(newUsage);
+                }
+            }
+            
+            // 绘制CPU使用率曲线
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            cpuUsage.forEach((usage, index) => {
+                const x = chartX + (chartWidth / maxCpuDataPoints) * index;
+                const y = chartY + chartHeight - (usage / 100) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制曲线发光效果
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.3)';
+            ctx.lineWidth = 6;
+            ctx.stroke();
+            
+            // 绘制当前使用率文本
+            const currentUsage = cpuUsage[cpuUsage.length - 1];
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = 'bold 14px Courier New'; // 减小字体
+            ctx.textAlign = 'left';
+            ctx.fillText(`CPU: ${Math.round(currentUsage)}%`, chartX + 10, chartY - 10);
+            
+            // 绘制使用率条形图
+            const barWidth = 6; // 减小条形宽度
+            const barSpacing = chartWidth / maxCpuDataPoints;
+            
+            cpuUsage.forEach((usage, index) => {
+                const x = chartX + barSpacing * index;
+                const barHeight = (usage / 100) * chartHeight;
+                const y = chartY + chartHeight - barHeight;
+                
+                // 条形渐变
+                const gradient = ctx.createLinearGradient(x, y + barHeight, x, y);
+                gradient.addColorStop(0, 'rgba(100, 200, 255, 0.2)');
+                gradient.addColorStop(1, 'rgba(100, 200, 255, 0.8)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth, barHeight);
+            });
+            
+            // CPU核心可视化将在单独位置绘制
+        }
+        
+        // 绘制CPU核心可视化
+        function drawCpuCores(centerX, centerY, progress) {
+            const coreRadius = 25; // 减小核心半径
+            const spacing = 60; // 减小间距
+            
+            // 标题
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = 'bold 12px Courier New'; // 减小字体
+            ctx.textAlign = 'center';
+            ctx.fillText('CPU CORES', centerX, centerY - 40);
+            
+            // 更新核心使用率 - 减慢更新速度
+            if (progress > 0.3) {
+                // 降低更新频率，从每帧更新改为每4帧更新一次
+                if (Math.floor(animationTime / 50) % 4 === 0) {
+                    cpuCores.forEach(core => {
+                        core.targetUsage = 20 + Math.random() * 60 + Math.sin(animationTime / 800 + core.id) * 20; // 减慢正弦波变化速度
+                        core.usage += (core.targetUsage - core.usage) * 0.08; // 减慢变化速度
+                    });
+                }
+            }
+            
+            // 绘制核心
+            cpuCores.forEach((core, index) => {
+                const row = Math.floor(index / 2);
+                const col = index % 2;
+                const x = centerX - spacing/2 + col * spacing;
+                const y = centerY + row * spacing;
+                
+                core.x = x;
+                core.y = y;
+                
+                // 核心背景
+                ctx.fillStyle = 'rgba(20, 25, 35, 0.8)';
+                ctx.beginPath();
+                ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 核心使用率扇形
+                const startAngle = -Math.PI / 2;
+                const endAngle = startAngle + (core.usage / 100) * Math.PI * 2;
+                
+                ctx.fillStyle = core.color;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.arc(x, y, coreRadius - 5, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 核心边框
+                ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // 核心标签
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = 'bold 10px Courier New'; // 减小字体
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`Core ${index + 1}`, x, y);
+                
+                // 使用率文本
+                ctx.font = '8px Courier New'; // 减小字体
+                ctx.fillText(`${Math.round(core.usage)}%`, x, y + 12);
+            });
+        }
+        
+        // 动画函数
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            animationTime = timestamp - startTime;
+            
+            // 计算动画进度
+            const progress = Math.min(animationTime / animationDuration, 1);
+            
+            // 清空画布
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新和绘制粒子
+            updateParticles();
+            drawParticles();
+            
+            // 绘制各个元素
+            drawExecutionFlow(progress);
+            drawMemoryBlocks(progress);
+            drawCpuChart(progress);
+            drawCpuCores(910, 190, progress); // 在右上角单独绘制CPU核心，向下移动
+            
+            // 更新标题透明度
+            titleElement.style.opacity = Math.min(1, progress * 2);
+            
+            // 继续动画
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // 动画结束后循环
+                setTimeout(() => {
+                    startTime = null;
+                    // 重置状态
+                    executionFlow.nodes.forEach(node => {
+                        node.active = false;
+                        node.pulsePhase = 0;
+                    });
+                    executionFlow.connections.forEach(conn => {
+                        conn.active = false;
+                        conn.progress = 0;
+                    });
+                    memoryBlocks.forEach(block => {
+                        block.allocated = false;
+                        block.opacity = 0;
+                        block.scale = 0.8;
+                        block.allocationTime = 0;
+                    });
+                    cpuUsage.fill(0);
+                    cpuCores.forEach(core => {
+                        core.usage = 0;
+                        core.targetUsage = 0;
+                    });
+                    requestAnimationFrame(animate);
+                }, 1000);
+            }
+        }
+        
+        // 初始化
+        initParticles();
+        initMemoryBlocks();
+        initCpuData();
+        initCpuCores();
+        
+        // 启动动画
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
