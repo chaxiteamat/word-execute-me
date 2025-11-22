@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 4: Set up our new world</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .scene-title {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 18px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="scene-title">
+        <p>Set up our new world</p>
+    </div>
+    
+    <script>
+        // 获取画布和上下文
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // 场景参数
+        let currentTime = 0;
+        const animationDuration = 17000; // 17秒动画时长
+        let animationId = null;
+        
+        // 3D网格世界参数
+        const grid3D = {
+            rows: 20,
+            cols: 20,
+            depth: 10,
+            cellSize: 30,
+            rotationX: 0.3,
+            rotationZ: 0,
+            points: [],
+            lines: [],
+            opacity: 0,
+            scale: 0.1
+        };
+        
+        // 粒子系统参数
+        const particles = {
+            count: 500,
+            points: [],
+            opacity: 0,
+            connections: []
+        };
+        
+        // SIMULATION标题参数
+        const title = {
+            text: 'SIMULATION',
+            x: 0,
+            y: 0,
+            fontSize: 80,
+            opacity: 0,
+            glitch: false,
+            glitchIntensity: 0
+        };
+        
+        // 初始化3D网格点
+        function initGrid3D() {
+            grid3D.points = [];
+            const halfRows = grid3D.rows / 2;
+            const halfCols = grid3D.cols / 2;
+            const halfDepth = grid3D.depth / 2;
+            
+            for (let z = 0; z < grid3D.depth; z++) {
+                for (let y = 0; y < grid3D.rows; y++) {
+                    for (let x = 0; x < grid3D.cols; x++) {
+                        grid3D.points.push({
+                            x: (x - halfCols) * grid3D.cellSize,
+                            y: (y - halfRows) * grid3D.cellSize,
+                            z: (z - halfDepth) * grid3D.cellSize,
+                            visible: false,
+                            opacity: 0
+                        });
+                    }
+                }
+            }
+            
+            // 创建网格线连接
+            createGridLines();
+        }
+        
+        // 创建网格线连接
+        function createGridLines() {
+            grid3D.lines = [];
+            
+            for (let z = 0; z < grid3D.depth; z++) {
+                for (let y = 0; y < grid3D.rows; y++) {
+                    for (let x = 0; x < grid3D.cols; x++) {
+                        const currentIndex = z * grid3D.rows * grid3D.cols + y * grid3D.cols + x;
+                        
+                        // 连接到右侧点
+                        if (x < grid3D.cols - 1) {
+                            grid3D.lines.push({
+                                from: currentIndex,
+                                to: currentIndex + 1,
+                                opacity: 0
+                            });
+                        }
+                        
+                        // 连接到下方点
+                        if (y < grid3D.rows - 1) {
+                            grid3D.lines.push({
+                                from: currentIndex,
+                                to: currentIndex + grid3D.cols,
+                                opacity: 0
+                            });
+                        }
+                        
+                        // 连接到深度方向的点
+                        if (z < grid3D.depth - 1) {
+                            grid3D.lines.push({
+                                from: currentIndex,
+                                to: currentIndex + grid3D.rows * grid3D.cols,
+                                opacity: 0
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 初始化粒子系统
+        function initParticles() {
+            particles.points = [];
+            
+            for (let i = 0; i < particles.count; i++) {
+                particles.points.push({
+                    x: (Math.random() - 0.5) * canvas.width,
+                    y: (Math.random() - 0.5) * canvas.height,
+                    z: (Math.random() - 0.5) * 500,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    vz: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 3 + 1,
+                    opacity: Math.random() * 0.5 + 0.5
+                });
+            }
+            
+            // 创建粒子之间的连接
+            createParticleConnections();
+        }
+        
+        // 创建粒子连接
+        function createParticleConnections() {
+            particles.connections = [];
+            
+            for (let i = 0; i < particles.points.length; i++) {
+                for (let j = i + 1; j < particles.points.length; j++) {
+                    const dx = particles.points[i].x - particles.points[j].x;
+                    const dy = particles.points[i].y - particles.points[j].y;
+                    const dz = particles.points[i].z - particles.points[j].z;
+                    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                    
+                    // 只连接距离较近的粒子
+                    if (distance < 100) {
+                        particles.connections.push({
+                            from: i,
+                            to: j,
+                            distance: distance,
+                            opacity: 1 - distance / 100
+                        });
+                    }
+                }
+            }
+        }
+        
+        // 3D到2D投影
+        function project3D(point3D) {
+            // 应用旋转
+            const cosX = Math.cos(grid3D.rotationX);
+            const sinX = Math.sin(grid3D.rotationX);
+            const cosZ = Math.cos(grid3D.rotationZ);
+            const sinZ = Math.sin(grid3D.rotationZ);
+            
+            // 绕X轴旋转
+            let y = point3D.y * cosX - point3D.z * sinX;
+            let z = point3D.y * sinX + point3D.z * cosX;
+            
+            // 绕Z轴旋转
+            let x = point3D.x * cosZ - y * sinZ;
+            y = point3D.x * sinZ + y * cosZ;
+            
+            // 应用透视投影
+            const perspective = 800 / (800 + z);
+            x *= perspective * grid3D.scale;
+            y *= perspective * grid3D.scale;
+            
+            // 移动到画布中心
+            return {
+                x: x + canvas.width / 2,
+                y: y + canvas.height / 2,
+                scale: perspective
+            };
+        }
+        
+        // 绘制3D网格
+        function drawGrid3D() {
+            if (grid3D.opacity <= 0) return;
+            
+            ctx.save();
+            ctx.globalAlpha = grid3D.opacity;
+            
+            // 绘制网格线
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            
+            grid3D.lines.forEach(line => {
+                const fromPoint = grid3D.points[line.from];
+                const toPoint = grid3D.points[line.to];
+                
+                if (fromPoint.visible && toPoint.visible) {
+                    const from2D = project3D(fromPoint);
+                    const to2D = project3D(toPoint);
+                    
+                    ctx.globalAlpha = line.opacity * grid3D.opacity;
+                    ctx.beginPath();
+                    ctx.moveTo(from2D.x, from2D.y);
+                    ctx.lineTo(to2D.x, to2D.y);
+                    ctx.stroke();
+                }
+            });
+            
+            // 绘制网格点
+            ctx.fillStyle = '#fff';
+            grid3D.points.forEach(point => {
+                if (point.visible) {
+                    const point2D = project3D(point);
+                    ctx.globalAlpha = point.opacity * grid3D.opacity;
+                    ctx.beginPath();
+                    ctx.arc(point2D.x, point2D.y, 2 * point2D.scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            
+            ctx.restore();
+        }
+        
+        // 绘制粒子系统
+        function drawParticles() {
+            if (particles.opacity <= 0) return;
+            
+            ctx.save();
+            
+            // 绘制粒子连接
+            ctx.strokeStyle = '#888';
+            particles.connections.forEach(connection => {
+                const fromPoint = particles.points[connection.from];
+                const toPoint = particles.points[connection.to];
+                
+                ctx.globalAlpha = connection.opacity * particles.opacity * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(fromPoint.x, fromPoint.y);
+                ctx.lineTo(toPoint.x, toPoint.y);
+                ctx.stroke();
+            });
+            
+            // 绘制粒子
+            ctx.fillStyle = '#888';
+            particles.points.forEach(point => {
+                ctx.globalAlpha = point.opacity * particles.opacity;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, point.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.restore();
+        }
+        
+        // 绘制SIMULATION标题
+        function drawTitle() {
+            if (title.opacity <= 0) return;
+            
+            ctx.save();
+            
+            // 设置标题位置
+            title.x = canvas.width / 2;
+            title.y = canvas.height / 3;
+            
+            // 绘制主标题
+            ctx.font = `bold ${title.fontSize}px 'Courier New', monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // 应用故障效果
+            if (title.glitch) {
+                // 绘制多个偏移的副本来创建故障效果
+                for (let i = 0; i < 3; i++) {
+                    const offsetX = (Math.random() - 0.5) * 10 * title.glitchIntensity;
+                    const offsetY = (Math.random() - 0.5) * 5 * title.glitchIntensity;
+                    
+                    ctx.fillStyle = i === 0 ? '#fff' : (i === 1 ? '#888' : '#444');
+                    ctx.globalAlpha = title.opacity * (i === 0 ? 1 : 0.7);
+                    ctx.fillText(title.text, title.x + offsetX, title.y + offsetY);
+                }
+            } else {
+                ctx.fillStyle = '#fff';
+                ctx.globalAlpha = title.opacity;
+                ctx.fillText(title.text, title.x, title.y);
+            }
+            
+            ctx.restore();
+        }
+        
+        // 更新动画状态
+        function updateAnimation() {
+            currentTime += 16; // 假设60fps，每帧约16ms
+            const progress = Math.min(1, currentTime / animationDuration);
+            
+            // 更新3D网格旋转
+            grid3D.rotationZ = progress * Math.PI * 2;
+            
+            // 更新3D网格缩放和透明度
+            if (progress < 0.3) {
+                grid3D.scale = 0.1 + (progress / 0.3) * 0.9;
+                grid3D.opacity = progress / 0.3;
+            } else {
+                grid3D.scale = 1;
+                grid3D.opacity = 1;
+            }
+            
+            // 逐个显示网格点（从点到面的构建过程）
+            const pointsToShow = Math.floor(grid3D.points.length * Math.min(1, progress * 2));
+            for (let i = 0; i < pointsToShow; i++) {
+                grid3D.points[i].visible = true;
+                grid3D.points[i].opacity = Math.min(1, grid3D.points[i].opacity + 0.05);
+            }
+            
+            // 逐个显示网格线
+            const linesToShow = Math.floor(grid3D.lines.length * Math.min(1, (progress - 0.2) * 2));
+            for (let i = 0; i < linesToShow; i++) {
+                grid3D.lines[i].opacity = Math.min(1, grid3D.lines[i].opacity + 0.05);
+            }
+            
+            // 更新粒子系统
+            if (progress > 0.1) {
+                particles.opacity = Math.min(1, (progress - 0.1) / 0.2);
+                
+                // 更新粒子位置
+                particles.points.forEach(point => {
+                    point.x += point.vx;
+                    point.y += point.vy;
+                    point.z += point.vz;
+                    
+                    // 边界检测
+                    if (point.x < 0 || point.x > canvas.width) point.vx *= -1;
+                    if (point.y < 0 || point.y > canvas.height) point.vy *= -1;
+                    if (point.z < -250 || point.z > 250) point.vz *= -1;
+                });
+                
+                // 更新粒子连接
+                createParticleConnections();
+            }
+            
+            // 更新标题
+            if (progress > 0.3) {
+                title.opacity = Math.min(1, (progress - 0.3) / 0.2);
+                title.fontSize = 80 + Math.sin(currentTime / 500) * 5;
+                
+                // 随机触发故障效果
+                title.glitch = Math.random() > 0.95;
+                title.glitchIntensity = title.glitch ? Math.random() : 0;
+            }
+        }
+        
+        // 渲染函数
+        function render() {
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新动画状态
+            updateAnimation();
+            
+            // 绘制场景元素
+            drawParticles();
+            drawGrid3D();
+            drawTitle();
+            
+            // 继续动画循环
+            if (currentTime < animationDuration) {
+                animationId = requestAnimationFrame(render);
+            }
+        }
+        
+        // 初始化函数
+        function init() {
+            initGrid3D();
+            initParticles();
+            
+            // 开始动画
+            render();
+        }
+        
+        // 启动场景
+        init();
+    </script>
+</body>
+</html>
