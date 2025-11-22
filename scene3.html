@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World.execute(me) - Scene 3</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+        
+        button:hover {
+            background-color: #444;
+        }
+        
+        .scene-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .scene-title {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 18px;
+            text-align: right;
+        }
+        
+        .navigation {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-button {
+            background-color: rgba(51, 51, 51, 0.7);
+            color: #fff;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(68, 68, 68, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="scene-info">
+        Scene 3: Fill in my data parameters / INITIALIZATION
+    </div>
+    
+    <div class="scene-title">
+        <p>Fill in my data parameters</p>
+        <p>INITIALIZATION</p>
+    </div>
+    
+    <div class="navigation">
+        <a href="scene2.html" class="nav-button">← Scene 2</a>
+        <a href="scene4.html" class="nav-button">Scene 4 →</a>
+    </div>
+    
+    <div class="controls">
+        <button id="playBtn">播放</button>
+        <button id="resetBtn">重置</button>
+    </div>
+    
+    <script>
+        // 获取画布和上下文
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 获取控制按钮
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // 动画参数
+        let isPlaying = false;
+        let startTime = null;
+        let currentTime = 0;
+// 动画配置
+        const animationDuration = 2500; // 缩短动画时长，从5000ms改为2500ms
+        let animationId = null;
+        
+        // 终端参数
+        const terminal = {
+            x: canvas.width / 2 - 400,
+            y: canvas.height / 2 - 200, // 向上调整终端位置
+            width: 800,
+            height: 500,
+            opacity: 0,
+            lines: [],
+            cursorBlink: true,
+            cursorVisible: true
+        };
+        
+        // 进度条参数
+        const progressBar = {
+            x: terminal.x + 50,
+            y: terminal.y + terminal.height - 80,
+            width: terminal.width - 100,
+            height: 6,  // 改为更细的进度条
+            progress: 0,
+            opacity: 0,
+            particles: [],
+            glowIntensity: 0,
+            segments: [],  // 添加分段进度条
+            segmentCount: 20,  // 分段数量
+            slidingBar: {  // 添加滑动条
+                x: 0,
+                width: 40,  // 滑动条宽度
+                speed: 2,   // 滑动速度
+                direction: 1  // 滑动方向，1为向右，-1为向左
+            }
+        };
+        
+        // 二进制数据流参数
+        const binaryStreams = [];
+        const maxBinaryStreams = 15;
+        
+        // 初始化终端行
+        function initTerminalLines() {
+            terminal.lines = [
+                { text: 'SYSTEM.INIT', delay: 0, opacity: 0 },
+                { text: '> Loading kernel modules...', delay: 100, opacity: 0 },
+                { text: '> Initializing memory manager...', delay: 200, opacity: 0 },
+                { text: '> Mounting file systems...', delay: 300, opacity: 0 },
+                { text: '> Starting network services...', delay: 400, opacity: 0 },
+                { text: '> Launching security protocols...', delay: 500, opacity: 0 },
+                { text: '> System ready.', delay: 600, opacity: 0 }
+            ];
+        }
+        
+        // 初始化进度条粒子
+        function initProgressBarParticles() {
+            progressBar.particles = [];
+            const particleCount = 30;  // 减少粒子数量
+            
+            for (let i = 0; i < particleCount; i++) {
+                progressBar.particles.push({
+                    x: Math.random() * progressBar.width,
+                    y: Math.random() * progressBar.height,
+                    size: Math.random() * 1.5 + 0.5,  // 减小粒子大小
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    speedY: (Math.random() - 0.5) * 0.5,
+                    opacity: Math.random() * 0.5 + 0.5,
+                    color: Math.random() > 0.5 ? '#0f0' : '#0a0'
+                });
+            }
+            
+            // 初始化分段进度条
+            progressBar.segments = [];
+            for (let i = 0; i < progressBar.segmentCount; i++) {
+                progressBar.segments.push({
+                    active: false,
+                    brightness: 0,
+                    size: 0
+                });
+            }
+            
+            // 初始化滑动条
+            progressBar.slidingBar.x = 0;
+        }
+        
+        // 初始化二进制数据流
+        function initBinaryStreams() {
+            binaryStreams.length = 0;
+            const streamCount = 15;
+            
+            for (let i = 0; i < streamCount; i++) {
+                binaryStreams.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    speed: 1 + Math.random() * 2,
+                    opacity: 0.5,
+                    characters: [],
+                    delay: Math.random() * 1000
+                });
+                
+                // 为每个流生成随机长度的二进制字符
+                const charCount = 10 + Math.floor(Math.random() * 20);
+                for (let j = 0; j < charCount; j++) {
+                    binaryStreams[i].characters.push({
+                        char: Math.random() > 0.5 ? '1' : '0',
+                        y: j * 15
+                    });
+                }
+            }
+        }
+        
+        // 绘制终端窗口
+        function drawTerminal(progress) {
+            // 根据进度计算终端透明度
+            terminal.opacity = Math.min(1, progress * 2);
+            
+            ctx.save();
+            ctx.globalAlpha = terminal.opacity;
+            
+            // 绘制终端背景
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(terminal.x, terminal.y, terminal.width, terminal.height);
+            
+            // 绘制终端边框
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(terminal.x, terminal.y, terminal.width, terminal.height);
+            
+            // 绘制终端标题栏
+            ctx.fillStyle = '#222';
+            ctx.fillRect(terminal.x, terminal.y, terminal.width, 30);
+            
+            // 绘制终端标题
+            ctx.fillStyle = '#ccc';
+            ctx.font = '14px Courier New';
+            ctx.fillText("INITIALIZATION", terminal.x + 10, terminal.y + 20);
+            
+            // 绘制终端控制按钮
+            ctx.fillStyle = '#ff5f56';
+            ctx.fillRect(terminal.x + terminal.width - 90, terminal.y + 10, 12, 12);
+            ctx.fillStyle = '#ffbd2e';
+            ctx.fillRect(terminal.x + terminal.width - 70, terminal.y + 10, 12, 12);
+            ctx.fillStyle = '#27c93f';
+            ctx.fillRect(terminal.x + terminal.width - 50, terminal.y + 10, 12, 12);
+            
+            // 绘制终端内容
+        ctx.font = '16px Courier New';
+        let lineY = terminal.y + 60;
+        
+        terminal.lines.forEach(line => {
+            // 计算每行的动画进度（考虑延迟）
+            const lineProgress = Math.max(0, Math.min(1, (currentTime - line.delay) / 500));
+            
+            if (lineProgress > 0) {
+                line.opacity = Math.min(1, lineProgress * 2);
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${line.opacity})`;
+                ctx.fillText(line.text, terminal.x + 20, lineY);
+            }
+            
+            lineY += 25;
+        });
+        
+        // 绘制光标
+        if (terminal.cursorVisible && terminal.lines.length > 0) {
+            const lastLine = terminal.lines[terminal.lines.length - 1];
+            const lastLineProgress = Math.max(0, Math.min(1, (currentTime - lastLine.delay) / 500));
+            
+            if (lastLineProgress > 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${lastLine.opacity})`;
+                const textWidth = ctx.measureText(lastLine.text).width;
+                ctx.fillRect(terminal.x + 20 + textWidth + 5, lineY - 25, 10, 18);
+            }
+        }
+            
+            ctx.restore();
+        }
+        
+        // 绘制进度条
+        function drawProgressBar(progress) {
+            // 根据进度计算进度条透明度
+            progressBar.opacity = Math.min(1, Math.max(0, (progress - 0.2) * 2));
+            
+            ctx.save();
+            ctx.globalAlpha = progressBar.opacity;
+            
+            // 绘制进度条边框
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(progressBar.x, progressBar.y, progressBar.width, progressBar.height);
+            
+            // 绘制进度条背景
+            ctx.fillStyle = '#222';
+            ctx.fillRect(progressBar.x + 1, progressBar.y + 1, progressBar.width - 2, progressBar.height - 2);
+            
+            // 计算进度条进度
+            progressBar.progress = Math.min(1, progress * 1.2);
+            
+            // 计算当前应该激活的分段数量
+            const activeSegments = Math.floor(progressBar.progress * progressBar.segmentCount);
+            
+            // 绘制分段进度条 - 一动一动的效果
+            const segmentWidth = progressBar.width / progressBar.segmentCount;
+            
+            for (let i = 0; i < progressBar.segmentCount; i++) {
+                const segmentX = progressBar.x + i * segmentWidth;
+                const isActive = i < activeSegments;
+                
+                // 更新分段状态
+                progressBar.segments[i].active = isActive;
+                
+                // 计算分段的亮度和大小（创建一动一动的效果）
+                if (isActive) {
+                    // 使用正弦函数创建波动效果 - 加快波动速度
+                    const wave = Math.sin(currentTime / 50 + i * 0.5) * 0.5 + 0.5;
+                    progressBar.segments[i].brightness = 0.7 + wave * 0.3;
+                    
+                    // 增加随机闪烁效果的概率
+                    if (Math.random() < 0.1) {
+                        progressBar.segments[i].brightness = 1;
+                    }
+                } else {
+                    progressBar.segments[i].brightness *= 0.85; // 加快渐隐效果
+                }
+                
+                // 绘制分段
+                const brightness = progressBar.segments[i].brightness;
+                if (brightness > 0.01) {
+                    // 发光效果
+                    ctx.shadowBlur = 5 * brightness;
+                    ctx.shadowColor = `rgba(200, 200, 200, ${brightness})`;
+                    
+                    // 分段颜色 - 改为灰色
+                    const gray = Math.floor(100 + brightness * 155);
+                    ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+                    
+                    // 绘制分段（稍微留一点间隙）
+                    ctx.fillRect(segmentX + 1, progressBar.y, segmentWidth - 2, progressBar.height);
+                }
+            }
+            
+            ctx.shadowBlur = 0;
+            
+            // 绘制滑动条（类似Windows红外传输动画）
+            const slidingBarX = progressBar.x + progressBar.slidingBar.x;
+            const slidingBarWidth = progressBar.slidingBar.width;
+            
+            // 确保滑动条在进度条范围内
+            if (slidingBarX >= progressBar.x && 
+                slidingBarX + slidingBarWidth <= progressBar.x + progressBar.width) {
+                
+                // 绘制滑动条
+                ctx.fillStyle = '#666';
+                ctx.fillRect(slidingBarX, progressBar.y, slidingBarWidth, progressBar.height);
+                
+                // 添加滑动条发光效果
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#888';
+                ctx.fillRect(slidingBarX, progressBar.y, slidingBarWidth, progressBar.height);
+                ctx.shadowBlur = 0;
+            }
+            
+            // 绘制进度百分比
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Courier New';
+            ctx.fillText(`${Math.floor(progressBar.progress * 100)}%`, progressBar.x + progressBar.width / 2 - 15, progressBar.y - 5);
+            
+            // 绘制进度条端点发光
+            if (progressBar.progress > 0) {
+                const endX = progressBar.x + progressBar.width * progressBar.progress;
+                const endY = progressBar.y + progressBar.height / 2;
+                
+                // 外发光
+                const glowGradient = ctx.createRadialGradient(endX, endY, 0, endX, endY, 10);
+                glowGradient.addColorStop(0, 'rgba(200, 200, 200, 0.8)');
+                glowGradient.addColorStop(1, 'rgba(200, 200, 200, 0)');
+                
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(endX, endY, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 内核
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(endX, endY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制二进制数据流
+        function drawBinaryStreams(progress) {
+            binaryStreams.forEach(stream => {
+                // 计算每个流的动画进度（考虑延迟）
+                const streamProgress = Math.max(0, Math.min(1, (currentTime - stream.delay) / 1000)); // 缩短动画时长
+                
+                if (streamProgress > 0) {
+                    stream.opacity = Math.min(0.7, streamProgress);
+                    
+                    ctx.save();
+                    ctx.globalAlpha = stream.opacity;
+                    ctx.font = '12px Courier New';
+                    
+                    // 更新流的位置
+                    stream.y += stream.speed;
+                    
+                    // 如果流超出屏幕，重置位置
+                    if (stream.y > canvas.height) {
+                        stream.y = -stream.characters.length * 15;
+                        stream.x = Math.random() * canvas.width;
+                    }
+                    
+                    // 绘制二进制字符
+                    stream.characters.forEach(char => {
+                        const charY = stream.y + char.y;
+                        
+                        // 只绘制在屏幕内的字符
+                        if (charY > 0 && charY < canvas.height) {
+                            // 随机改变字符
+                            if (Math.random() < 0.01) {
+                                char.char = Math.random() > 0.5 ? '1' : '0';
+                            }
+                            
+                            // 随机改变透明度，创建闪烁效果
+                            const charOpacity = 0.3 + Math.random() * 0.7;
+                            ctx.fillStyle = `rgba(255, 255, 255, ${charOpacity})`;
+                            ctx.fillText(char.char, stream.x, charY);
+                        }
+                    });
+                    
+                    ctx.restore();
+                }
+            });
+        }
+        
+        // 光标闪烁效果
+        function updateCursor() {
+            if (isPlaying) {
+                terminal.cursorVisible = Math.floor(currentTime / 500) % 2 === 0;
+            }
+        }
+        
+        // 更新进度条
+        function updateProgressBar() {
+            // 更新滑动条位置
+            progressBar.slidingBar.x += progressBar.slidingBar.speed * progressBar.slidingBar.direction;
+            
+            // 如果滑动条到达边界，改变方向
+            if (progressBar.slidingBar.x <= 0) {
+                progressBar.slidingBar.x = 0;
+                progressBar.slidingBar.direction = 1;
+            } else if (progressBar.slidingBar.x + progressBar.slidingBar.width >= progressBar.width) {
+                progressBar.slidingBar.x = progressBar.width - progressBar.slidingBar.width;
+                progressBar.slidingBar.direction = -1;
+            }
+            
+            // 更新粒子位置
+            progressBar.particles.forEach(particle => {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                
+                // 边界检测
+                if (particle.x < 0 || particle.x > progressBar.width) {
+                    particle.speedX *= -1;
+                }
+                if (particle.y < 0 || particle.y > progressBar.height) {
+                    particle.speedY *= -1;
+                }
+            });
+            
+            // 更新发光效果
+            progressBar.glowIntensity = 1 + Math.sin(currentTime / 200) * 0.5;
+        }
+        
+        // 渲染函数
+        function render() {
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 计算动画进度
+            const progress = Math.min(1, currentTime / animationDuration);
+            
+            // 更新进度条
+            updateProgressBar();
+            
+            // 绘制场景元素
+            drawBinaryStreams(progress);
+            drawTerminal(progress);
+            drawProgressBar(progress);
+            
+            // 更新光标
+            updateCursor();
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            currentTime = timestamp - startTime;
+            
+            render();
+            
+            if (currentTime < animationDuration && isPlaying) {
+                animationId = requestAnimationFrame(animate);
+            } else if (currentTime >= animationDuration) {
+                isPlaying = false;
+                playBtn.textContent = '重新播放';
+            }
+        }
+        
+        // 播放按钮事件
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                startTime = null;
+                playBtn.textContent = '暂停';
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isPlaying = false;
+                playBtn.textContent = '继续';
+                cancelAnimationFrame(animationId);
+            }
+        });
+        
+        // 重置按钮事件
+        resetBtn.addEventListener('click', () => {
+            isPlaying = false;
+            currentTime = 0;
+            startTime = null;
+            
+            // 重置终端行状态
+            terminal.lines.forEach(line => {
+                line.opacity = 0;
+            });
+            
+            // 初始化进度条
+            progressBar.progress = 0;
+            
+            // 初始化进度条粒子和分段
+            initProgressBarParticles();
+            
+            playBtn.textContent = '播放';
+            cancelAnimationFrame(animationId);
+            render();
+        });
+        
+        // 初始化
+        function init() {
+            // 更新终端位置 - 调整为在1920x1080画布上居中
+            terminal.x = canvas.width / 2 - 400;
+            terminal.y = canvas.height / 2 - 200; // 向上调整终端位置
+            
+            // 更新进度条位置
+            progressBar.x = terminal.x + 50;
+            progressBar.y = terminal.y + terminal.height - 80;
+            
+            // 初始化终端行
+            initTerminalLines();
+            
+            // 初始化二进制流
+            initBinaryStreams();
+            
+            // 初始化进度条粒子和分段
+            initProgressBarParticles();
+            
+            render();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
