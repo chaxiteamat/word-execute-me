@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World.execute(me) - Scene 2</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+        
+        button:hover {
+            background-color: #444;
+        }
+        
+        .scene-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .scene-title {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 18px;
+            text-align: right;
+        }
+        
+        .navigation {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-button {
+            background-color: rgba(51, 51, 51, 0.7);
+            color: #fff;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(68, 68, 68, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="scene-info">
+        Scene 2: Lay down your pieces / And let's begin OBJECT CREATION
+    </div>
+    
+    <div class="scene-title">
+        <p>Lay down your pieces</p>
+        <p>And let's begin OBJECT CREATION</p>
+    </div>
+    
+    <div class="navigation">
+        <a href="scene1.html" class="nav-button">← Scene 1</a>
+        <a href="scene3.html" class="nav-button">Scene 3 →</a>
+    </div>
+    
+    <div class="controls">
+        <button id="playBtn">播放</button>
+        <button id="resetBtn">重置</button>
+    </div>
+    
+    <script>
+        // 获取画布和上下文
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 获取控制按钮
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // 动画参数
+        let isPlaying = false;
+        let startTime = null;
+        let currentTime = 0;
+        const animationDuration = 4000; // 4秒动画时长
+        let animationId = null;
+        
+        // 棋盘参数
+        const chessboard = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            cellSize: 40,
+            rows: 8,
+            cols: 8,
+            opacity: 0
+        };
+        
+        // 棋子参数
+        const chessPieces = [];
+        
+        // 文字参数
+        const objectCreationText = {
+            text: "OBJECT CREATION",
+            x: canvas.width / 2,
+            y: canvas.height / 2 - 150, // 向上调整文字位置
+            fontSize: 24,
+            opacity: 0,
+            pixels: []
+        };
+        
+        // 初始化棋子
+        function initChessPieces() {
+            chessPieces.length = 0;
+            
+            // 创建黑白棋子，交错排列
+            for (let row = 0; row < chessboard.rows; row++) {
+                for (let col = 0; col < chessboard.cols; col++) {
+                    // 只在前三行和后三行放置棋子
+                    if (row < 3 || row >= 5) {
+                        const isBlack = (row + col) % 2 === 0;
+                        
+                        chessPieces.push({
+                            row: row,
+                            col: col,
+                            x: chessboard.x - (chessboard.cols * chessboard.cellSize) / 2 + col * chessboard.cellSize + chessboard.cellSize / 2,
+                            y: chessboard.y - (chessboard.rows * chessboard.cellSize) / 2 + row * chessboard.cellSize + chessboard.cellSize / 2,
+                            radius: chessboard.cellSize * 0.4,
+                            isBlack: isBlack,
+                            opacity: 0,
+                            scale: 0,
+                            delay: (row * chessboard.cols + col) * 15 // 每个棋子延迟15ms出现
+                        });
+                    }
+                }
+            }
+        }
+        
+        // 将文字转换为像素点
+        function textToPixels(text, x, y, fontSize) {
+            // 创建临时画布来渲染文字
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCtx.font = `bold ${fontSize}px Courier New`;
+            const textWidth = tempCtx.measureText(text).width;
+            const textHeight = fontSize;
+            
+            tempCanvas.width = textWidth;
+            tempCanvas.height = textHeight;
+            
+            // 在临时画布上绘制文字
+            tempCtx.font = `bold ${fontSize}px Courier New`;
+            tempCtx.fillStyle = '#fff';
+            tempCtx.textBaseline = 'top';
+            tempCtx.fillText(text, 0, 0);
+            
+            // 获取像素数据
+            const imageData = tempCtx.getImageData(0, 0, textWidth, textHeight);
+            const pixels = [];
+            
+            // 采样像素点（降低密度以提高性能）
+            const gap = 4;
+            for (let py = 0; py < textHeight; py += gap) {
+                for (let px = 0; px < textWidth; px += gap) {
+                    const index = (py * textWidth + px) * 4;
+                    const alpha = imageData.data[index + 3];
+                    
+                    if (alpha > 128) { // 只取不透明的像素
+                        pixels.push({
+                            x: x - textWidth / 2 + px,
+                            y: y + py,
+                            size: 3,
+                            opacity: 0,
+                            delay: (py * textWidth + px) * 0.02
+                        });
+                    }
+                }
+            }
+            
+            return pixels;
+        }
+        
+        // 绘制棋盘
+        function drawChessboard(progress) {
+            // 根据进度计算棋盘透明度
+            chessboard.opacity = Math.min(1, progress * 2);
+            
+            ctx.save();
+            ctx.globalAlpha = chessboard.opacity;
+            
+            // 计算棋盘位置
+            const boardWidth = chessboard.cols * chessboard.cellSize;
+            const boardHeight = chessboard.rows * chessboard.cellSize;
+            const startX = chessboard.x - boardWidth / 2;
+            const startY = chessboard.y - boardHeight / 2;
+            
+            // 绘制棋盘背景
+            ctx.fillStyle = '#111';
+            ctx.fillRect(startX, startY, boardWidth, boardHeight);
+            
+            // 绘制棋盘格子
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            for (let row = 0; row <= chessboard.rows; row++) {
+                ctx.beginPath();
+                ctx.moveTo(startX, startY + row * chessboard.cellSize);
+                ctx.lineTo(startX + boardWidth, startY + row * chessboard.cellSize);
+                ctx.stroke();
+            }
+            
+            for (let col = 0; col <= chessboard.cols; col++) {
+                ctx.beginPath();
+                ctx.moveTo(startX + col * chessboard.cellSize, startY);
+                ctx.lineTo(startX + col * chessboard.cellSize, startY + boardHeight);
+                ctx.stroke();
+            }
+            
+            // 绘制棋盘边框
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(startX, startY, boardWidth, boardHeight);
+            
+            ctx.restore();
+        }
+        
+        // 绘制棋子
+        function drawChessPieces(progress) {
+            chessPieces.forEach(piece => {
+                // 计算每个棋子的动画进度（考虑延迟）
+                const pieceProgress = Math.max(0, Math.min(1, (currentTime - piece.delay) / 500));
+                
+                if (pieceProgress > 0) {
+                    // 计算透明度和缩放
+                    piece.opacity = Math.min(1, pieceProgress * 3);
+                    piece.scale = easeOutBack(pieceProgress);
+                    
+                    ctx.save();
+                    ctx.globalAlpha = piece.opacity;
+                    
+                    // 绘制棋子阴影
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(piece.x + 2, piece.y + 2, piece.radius * piece.scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 绘制棋子
+                    const gradient = ctx.createRadialGradient(
+                        piece.x - piece.radius * 0.3, 
+                        piece.y - piece.radius * 0.3, 
+                        0,
+                        piece.x, 
+                        piece.y, 
+                        piece.radius * piece.scale
+                    );
+                    
+                    if (piece.isBlack) {
+                        gradient.addColorStop(0, '#444');
+                        gradient.addColorStop(0.5, '#222');
+                        gradient.addColorStop(1, '#000');
+                    } else {
+                        gradient.addColorStop(0, '#fff');
+                        gradient.addColorStop(0.5, '#ddd');
+                        gradient.addColorStop(1, '#bbb');
+                    }
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(piece.x, piece.y, piece.radius * piece.scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 绘制棋子高光
+                    ctx.fillStyle = piece.isBlack ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(
+                        piece.x - piece.radius * 0.3, 
+                        piece.y - piece.radius * 0.3, 
+                        piece.radius * 0.3 * piece.scale, 
+                        0, 
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+            });
+        }
+        
+        // 绘制"OBJECT CREATION"文字
+        function drawObjectCreationText(progress) {
+            // 根据进度计算文字透明度
+            objectCreationText.opacity = Math.min(1, Math.max(0, (progress - 0.3) * 2.5));
+            
+            ctx.save();
+            ctx.globalAlpha = objectCreationText.opacity;
+            
+            // 绘制像素点
+            objectCreationText.pixels.forEach(pixel => {
+                // 计算每个像素点的动画进度（考虑延迟）
+                const pixelProgress = Math.max(0, Math.min(1, (currentTime - 1000 - pixel.delay) / 800));
+                
+                if (pixelProgress > 0) {
+                    pixel.opacity = Math.min(1, pixelProgress * 3);
+                    
+                    ctx.fillStyle = `rgba(255, 255, 255, ${pixel.opacity})`;
+                    ctx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
+                }
+            });
+            
+            ctx.restore();
+        }
+        
+        // 缓动函数
+        function easeOutBack(t) {
+            const c1 = 1.70158;
+            const c3 = c1 + 1;
+            return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+        }
+        
+        // 渲染函数
+        function render() {
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 计算动画进度
+            const progress = Math.min(1, currentTime / animationDuration);
+            
+            // 绘制场景元素
+            drawChessboard(progress);
+            drawChessPieces(progress);
+            drawObjectCreationText(progress);
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            currentTime = timestamp - startTime;
+            
+            render();
+            
+            if (currentTime < animationDuration && isPlaying) {
+                animationId = requestAnimationFrame(animate);
+            } else if (currentTime >= animationDuration) {
+                isPlaying = false;
+                playBtn.textContent = '重新播放';
+            }
+        }
+        
+        // 播放按钮事件
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                startTime = null;
+                playBtn.textContent = '暂停';
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isPlaying = false;
+                playBtn.textContent = '继续';
+                cancelAnimationFrame(animationId);
+            }
+        });
+        
+        // 重置按钮事件
+        resetBtn.addEventListener('click', () => {
+            isPlaying = false;
+            currentTime = 0;
+            startTime = null;
+            
+            // 重置棋子状态
+            chessPieces.forEach(piece => {
+                piece.opacity = 0;
+                piece.scale = 0;
+            });
+            
+            // 重置文字像素状态
+            objectCreationText.pixels.forEach(pixel => {
+                pixel.opacity = 0;
+            });
+            
+            playBtn.textContent = '播放';
+            cancelAnimationFrame(animationId);
+            render();
+        });
+        
+        // 初始化
+        function init() {
+            // 更新棋盘位置 - 调整为在1920x1080画布上居中
+            chessboard.x = canvas.width / 2;
+            chessboard.y = canvas.height / 2 - 50; // 向上调整棋盘位置
+            
+            // 更新文字位置
+            objectCreationText.x = canvas.width / 2;
+            objectCreationText.y = canvas.height / 2 - 200; // 向上调整文字位置
+            
+            // 初始化棋子
+            initChessPieces();
+            
+            // 初始化文字像素
+            objectCreationText.pixels = textToPixels(
+                objectCreationText.text, 
+                objectCreationText.x, 
+                objectCreationText.y, 
+                objectCreationText.fontSize
+            );
+            
+            render();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
