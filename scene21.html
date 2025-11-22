@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景21：角色转换与恍惚状态</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #111 0%, #222 50%, #111 100%);
+            overflow: hidden;
+        }
+
+        /* 网格背景 */
+        .grid-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        /* 角色标签容器 */
+        .role-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 350px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+            margin-left: -200px; /* 向左移动整个容器 */
+        }
+
+        /* 角色符号 */
+        .role-symbol {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 1.5s ease-in-out;
+        }
+
+        .role-label {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        /* S符号 - 权杖 */
+        .s-symbol {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .scepter {
+            width: 30px;
+            height: 200px;
+            background: linear-gradient(180deg, #fff, #ddd);
+            position: relative;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+        }
+
+        .scepter::before {
+            content: '♔';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            font-size: 50px;
+            color: #fff;
+            text-align: center;
+            line-height: 60px;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+        }
+
+        .scepter::after {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 10px;
+            background-color: #fff;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        /* M符号 - 跪姿剪影 */
+        .m-symbol {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .kneeling-figure {
+            width: 220px;
+            height: 220px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .figure {
+            width: 120px;
+            height: 180px;
+            position: relative;
+        }
+
+        .head {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .body {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #444, #222);
+            border-radius: 20px 20px 10px 10px;
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .arms {
+            width: 100px;
+            height: 15px;
+            background: linear-gradient(90deg, #444, #222);
+            border-radius: 10px;
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .legs {
+            width: 80px;
+            height: 70px;
+            position: absolute;
+            top: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .leg {
+            width: 25px;
+            height: 70px;
+            background: linear-gradient(135deg, #444, #222);
+            border-radius: 10px;
+            position: absolute;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .leg.left {
+            left: 10px;
+            transform: rotate(-15deg);
+        }
+
+        .leg.right {
+            right: 10px;
+            transform: rotate(15deg);
+        }
+
+        .collar {
+            width: 50px;
+            height: 10px;
+            background: #333;
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+            z-index: 2;
+        }
+
+        .leash {
+            width: 3px;
+            height: 80px;
+            background: #666;
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        /* 增强M符号的视觉效果 */
+        .m-symbol.enhanced .head {
+            animation: headGlow 2s infinite alternate;
+        }
+
+        .m-symbol.enhanced .body {
+            animation: bodyPulse 2s infinite alternate;
+        }
+
+        .m-symbol.enhanced .collar {
+            background: #ff3366;
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+        }
+
+        .m-symbol.enhanced .leash {
+            background: #ff3366;
+            box-shadow: 0 0 5px rgba(255, 51, 102, 0.8);
+        }
+
+        @keyframes headGlow {
+            0% {
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 25px rgba(0, 0, 0, 1);
+            }
+        }
+
+        @keyframes bodyPulse {
+            0% {
+                transform: translateX(-50%) scale(1);
+            }
+            100% {
+                transform: translateX(-50%) scale(1.05);
+            }
+        }
+
+        /* 意识流 */
+        .consciousness-stream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            opacity: 0;
+        }
+
+        .stream-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #444, transparent);
+            animation: streamFlow 3s infinite linear;
+        }
+
+        @keyframes streamFlow {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* 恍惚状态效果 */
+        .trance-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .trance-distortion {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 30%, rgba(255,255,255,0.1) 70%, transparent 100%);
+            animation: trancePulse 2s infinite alternate;
+        }
+
+        @keyframes trancePulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+        }
+
+        /* 权杖动画 */
+        @keyframes scepterGlow {
+            0%, 100% { 
+                transform: scale(1); 
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.02); 
+                filter: brightness(1.2);
+            }
+        }
+
+        .scepter-glow {
+            animation: scepterGlow 2s ease-in-out infinite;
+        }
+
+        /* 锁链动画 */
+        @keyframes lockShake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(2deg); }
+            75% { transform: rotate(-2deg); }
+        }
+
+        .lock-shake {
+            animation: lockShake 1.5s ease-in-out infinite;
+        }
+
+        /* 连接纽带增强 */
+        .connection-bond {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 600px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #666, transparent);
+            transform: translate(-50%, -50%);
+            z-index: 8;
+            opacity: 0;
+        }
+
+        .bond-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #666;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: particleMove 4s infinite linear;
+        }
+
+        @keyframes particleMove {
+            0% {
+                left: 0;
+                box-shadow: 0 0 5px #666;
+            }
+            50% {
+                box-shadow: 0 0 15px #ff3366;
+            }
+            100% {
+                left: calc(100% - 10px);
+                box-shadow: 0 0 5px #666;
+            }
+        }
+
+        /* 歌词容器 */
+        .lyrics-container {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+            z-index: 20;
+            opacity: 0;
+        }
+
+        .lyrics {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        .translation {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scalePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .glitch-effect {
+            animation: glitch 0.3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- 网格背景 -->
+        <div class="grid-background"></div>
+        
+        <!-- 连接纽带 -->
+        <div class="connection-bond">
+            <div class="bond-particle"></div>
+        </div>
+        
+        <!-- 意识流 -->
+        <div class="consciousness-stream">
+            <div class="stream-line" style="top: 20%;"></div>
+            <div class="stream-line" style="top: 40%; animation-delay: 0.5s;"></div>
+            <div class="stream-line" style="top: 60%; animation-delay: 1s;"></div>
+            <div class="stream-line" style="top: 80%; animation-delay: 1.5s;"></div>
+        </div>
+        
+        <!-- 角色符号容器 -->
+        <div class="role-container">
+            <div class="role-symbol s-symbol">
+                <div class="scepter"></div>
+                <div class="role-label">支配者</div>
+            </div>
+            <div class="role-symbol m-symbol">
+                <div class="kneeling-figure">
+                    <div class="figure">
+                        <div class="head"></div>
+                        <div class="body"></div>
+                        <div class="arms"></div>
+                        <div class="legs">
+                            <div class="leg left"></div>
+                            <div class="leg right"></div>
+                        </div>
+                        <div class="collar"></div>
+                        <div class="leash"></div>
+                    </div>
+                </div>
+                <div class="role-label">臣服者</div>
+            </div>
+        </div>
+        
+        <!-- 恍惚状态效果 -->
+        <div class="trance-effect">
+            <div class="trance-distortion"></div>
+        </div>
+        
+        <!-- 歌词容器 -->
+        <div class="lyrics-container">
+            <div class="lyrics">Oh switch my role / To S to M / So we can enter The trance</div>
+            <div class="translation">哦，切换我的角色 / 从S到M / 这样我们就能进入恍惚状态</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取元素
+            const sSymbol = document.querySelector('.s-symbol');
+            const mSymbol = document.querySelector('.m-symbol');
+            const scepter = document.querySelector('.scepter');
+            const head = document.querySelector('.head');
+            const consciousnessStream = document.querySelector('.consciousness-stream');
+            const tranceEffect = document.querySelector('.trance-effect');
+            const connectionBond = document.querySelector('.connection-bond');
+            const lyricsContainer = document.querySelector('.lyrics-container');
+            
+            // 显示歌词
+            setTimeout(() => {
+                lyricsContainer.style.opacity = '1';
+                lyricsContainer.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+            }, 250);
+            
+            // 角色转换
+            function switchRole() {
+                const sSymbol = document.querySelector('.s-symbol');
+                const mSymbol = document.querySelector('.m-symbol');
+                const scepter = document.querySelector('.scepter');
+                const head = document.querySelector('.head');
+                
+                // S符号淡出
+                sSymbol.style.opacity = '0';
+                sSymbol.style.transform = 'scale(0.8)';
+                
+                // 延迟后M符号淡入
+                setTimeout(() => {
+                    mSymbol.style.opacity = '1';
+                    mSymbol.style.transform = 'scale(1)';
+                    mSymbol.classList.add('enhanced');
+                }, 500);
+                
+                // 延迟后切换回S符号
+                setTimeout(() => {
+                    mSymbol.style.opacity = '0';
+                    mSymbol.style.transform = 'scale(0.8)';
+                    mSymbol.classList.remove('enhanced');
+                    
+                    setTimeout(() => {
+                        sSymbol.style.opacity = '1';
+                        sSymbol.style.transform = 'scale(1)';
+                        scepter.classList.add('scepter-glow');
+                    }, 500);
+                }, 4000);
+                
+                // 移除故障效果时也移除动画类
+                setTimeout(() => {
+                    document.querySelector('.trance-effect').style.opacity = '0';
+                    scepter.classList.remove('scepter-glow');
+                }, 6000);
+            }
+            
+            // 开始角色转换
+            setTimeout(() => {
+                // 权杖发光
+                scepter.classList.add('scepter-glow');
+                
+                // S符号淡出
+                setTimeout(() => {
+                    sSymbol.style.opacity = '0';
+                    sSymbol.style.transform = 'scale(0.8)';
+                    scepter.classList.remove('scepter-glow');
+                }, 500);
+                
+                // M符号淡入
+                setTimeout(() => {
+                    mSymbol.style.opacity = '1';
+                    mSymbol.style.transform = 'scale(1)';
+                    mSymbol.classList.add('enhanced');
+                }, 1000);
+            }, 1500);
+            
+            // 显示意识流
+            setTimeout(() => {
+                consciousnessStream.style.opacity = '1';
+            }, 2000);
+            
+            // 显示连接纽带
+            setTimeout(() => {
+                connectionBond.style.opacity = '1';
+                connectionBond.style.animation = 'fadeIn 1s ease-in-out forwards';
+            }, 2500);
+            
+            // 显示恍惚状态
+            setTimeout(() => {
+                tranceEffect.style.opacity = '1';
+                sSymbol.classList.add('glitch-effect');
+                mSymbol.classList.add('glitch-effect');
+            }, 3500);
+            
+            // 角色切换回S
+            setTimeout(() => {
+                sSymbol.style.opacity = '1';
+                sSymbol.style.transform = 'scale(1)';
+                scepter.classList.add('scepter-glow');
+                
+                mSymbol.style.opacity = '0';
+                mSymbol.style.transform = 'scale(0.8)';
+                mSymbol.classList.remove('enhanced');
+            }, 5000);
+            
+            // 移除故障效果
+            setTimeout(() => {
+                sSymbol.classList.remove('glitch-effect');
+                mSymbol.classList.remove('glitch-effect');
+                scepter.classList.remove('scepter-glow');
+            }, 6000);
+        });
+    </script>
+</body>
+</html>
