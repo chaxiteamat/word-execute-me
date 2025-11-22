@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 28: EXECUTION</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(circle at center, #0a0a1a 0%, #000 70%);
+            overflow: hidden;
+        }
+
+        .execution-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            opacity: 0;
+            z-index: 10;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .execution-text.visible {
+            animation: pulseText 0.5s forwards, breathe 2s infinite 0.5s;
+        }
+
+        .execution-text.fade-out {
+            animation: fadeOutText 0.3s forwards;
+        }
+
+        .terminal {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 900px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            opacity: 0;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .terminal.visible {
+            animation: fadeIn 0.3s forwards;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .terminal-title {
+            color: #ddd;
+        }
+
+        .terminal-buttons {
+            display: flex;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        .terminal-button.close {
+            background-color: #ff5f56;
+        }
+
+        .terminal-button.minimize {
+            background-color: #ffbd2e;
+        }
+
+        .terminal-button.maximize {
+            background-color: #27c93f;
+        }
+
+        .terminal-body {
+            height: 200px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .terminal-prompt {
+            color: #27c93f;
+        }
+
+        .terminal-command {
+            color: #ddd;
+        }
+
+        .terminal-output {
+            color: #ddd;
+        }
+
+        .terminal-error {
+            color: #ff3860;
+        }
+
+        .terminal-warning {
+            color: #ffbd2e;
+        }
+
+        .terminal-success {
+            color: #27c93f;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            opacity: 0;
+        }
+
+        .progress-container.visible {
+            animation: fadeIn 0.3s forwards;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff3860, #ff5f56);
+            border-radius: 15px;
+            transition: width 0.2s ease;
+            box-shadow: 0 0 10px rgba(255, 56, 96, 0.5);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .execution-icon {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            opacity: 0;
+            z-index: 5;
+        }
+
+        .execution-icon.visible {
+            animation: iconPulse 0.5s forwards;
+        }
+
+        .execution-icon.skull {
+            color: #ff3860;
+        }
+
+        .execution-icon.cross {
+            color: #ff3860;
+            font-size: 6rem;
+        }
+
+        .glitch-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .glitch-effect.active {
+            animation: glitch 0.1s infinite;
+        }
+
+        .completion-text {
+            position: absolute;
+            bottom: 5%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #ddd;
+            opacity: 0;
+        }
+
+        .completion-text.visible {
+            animation: fadeIn 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes breathe {
+            0% {
+                opacity: 1;
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            }
+            50% {
+                opacity: 0.6;
+                text-shadow: 0 0 30px rgba(255, 56, 96, 0.9);
+            }
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        @keyframes pulseText {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes fadeOutText {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        @keyframes iconPulse {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+            }
+        }
+
+        @keyframes glitch {
+            0% {
+                opacity: 0.1;
+                background: rgba(255, 0, 255, 0.1);
+            }
+            25% {
+                opacity: 0.2;
+                background: rgba(0, 255, 255, 0.1);
+            }
+            50% {
+                opacity: 0.1;
+                background: rgba(255, 255, 0, 0.1);
+            }
+            75% {
+                opacity: 0.2;
+                background: rgba(255, 0, 0, 0.1);
+            }
+            100% {
+                opacity: 0.1;
+                background: rgba(0, 0, 255, 0.1);
+            }
+        }
+
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 0.5s steps(40, end);
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="glitch-effect" id="glitchEffect"></div>
+        
+        <div class="execution-text" id="executionText">EXECUTION</div>
+        <div class="execution-icon skull" id="executionIcon">💀</div>
+        <div class="execution-icon cross" id="executionIcon2">✖</div>
+        
+        <div class="terminal" id="terminal">
+            <div class="terminal-header">
+                <div class="terminal-title">System Terminal - root@execution:~</div>
+                <div class="terminal-buttons">
+                    <div class="terminal-button close"></div>
+                    <div class="terminal-button minimize"></div>
+                    <div class="terminal-button maximize"></div>
+                </div>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+                <!-- Terminal content will be added dynamically -->
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+        </div>
+
+        <div class="completion-text" id="completionText">
+            Execution complete. All processes terminated.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const executionText = document.getElementById('executionText');
+            const executionIcon = document.getElementById('executionIcon');
+            const executionIcon2 = document.getElementById('executionIcon2');
+            const terminal = document.getElementById('terminal');
+            const terminalBody = document.getElementById('terminalBody');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const completionText = document.getElementById('completionText');
+            const glitchEffect = document.getElementById('glitchEffect');
+
+            // Terminal commands and outputs
+            const terminalSequence = [
+                { type: 'prompt', text: '$' },
+                { type: 'command', text: ' sudo execute --target=all --force' },
+                { type: 'output', text: 'Initializing execution protocol...' },
+                { type: 'output', text: 'Scanning for active processes...' },
+                { type: 'output', text: 'Found 247 processes to terminate.' },
+                { type: 'warning', text: 'WARNING: This action cannot be undone.' },
+                { type: 'output', text: 'Execution in progress...' },
+                { type: 'error', text: 'Process 42 resisted termination. Applying force...' },
+                { type: 'output', text: 'Process 42 terminated.' },
+                { type: 'output', text: 'Continuing execution...' },
+                { type: 'output', text: 'Execution complete.' },
+                { type: 'prompt', text: '$' }
+            ];
+
+            // Animation timeline
+            function startExecutionCycle() {
+                // Show EXECUTION text
+                setTimeout(() => {
+                    executionText.classList.add('visible');
+                    glitchEffect.classList.add('active');
+                }, 500);
+
+                // Show skull icon
+                setTimeout(() => {
+                    executionIcon.classList.add('visible');
+                }, 1000);
+
+                // Show terminal
+                setTimeout(() => {
+                    terminal.classList.add('visible');
+                    animateTerminal();
+                }, 2000);
+
+                // Show progress bar
+                setTimeout(() => {
+                    progressContainer.classList.add('visible');
+                    animateProgress();
+                }, 3000);
+
+                // Show cross icon
+                setTimeout(() => {
+                    executionIcon2.classList.add('visible');
+                }, 4000);
+
+                // Show system status
+                setTimeout(() => {
+                    showSystemStatus();
+                }, 6000);
+
+                // Show process termination
+                setTimeout(() => {
+                    showProcessTermination();
+                }, 8000);
+
+                // Show execution complete
+                setTimeout(() => {
+                    showExecutionComplete();
+                }, 10000);
+
+                // Hide EXECUTION text and icons
+                setTimeout(() => {
+                    executionText.classList.add('fade-out');
+                    executionIcon.classList.add('fade-out');
+                    executionIcon2.classList.add('fade-out');
+                }, 12000);
+
+                // Show completion text
+                setTimeout(() => {
+                    completionText.classList.add('visible');
+                }, 13000);
+
+                // Reset for next cycle
+                setTimeout(() => {
+                    resetElements();
+                    startExecutionCycle();
+                }, 14000);
+            }
+
+            // Animate terminal
+            function animateTerminal() {
+                terminalBody.innerHTML = '';
+                let lineIndex = 0;
+                
+                function addLine() {
+                    if (lineIndex < terminalSequence.length) {
+                        const line = terminalSequence[lineIndex];
+                        const lineElement = document.createElement('div');
+                        lineElement.className = `terminal-line terminal-${line.type}`;
+                        
+                        if (line.type === 'prompt') {
+                            lineElement.textContent = line.text;
+                        } else if (line.type === 'command') {
+                            lineElement.textContent = line.text;
+                            lineElement.classList.add('typing-effect');
+                        } else {
+                            lineElement.textContent = line.text;
+                        }
+                        
+                        terminalBody.appendChild(lineElement);
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                        
+                        lineIndex++;
+                        setTimeout(addLine, line.type === 'command' ? 300 : 150);
+                    }
+                }
+                
+                addLine();
+            }
+
+            // Animate progress bar
+            function animateProgress() {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 2; // Slower progress to match 14-second timeline
+                    if (progress > 100) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    
+                    progressFill.style.width = `${progress}%`;
+                    progressText.textContent = `${progress}%`;
+                }, 140); // 100% / 2% per step = 50 steps * 140ms = 7 seconds
+            }
+
+            // Show system status
+            function showSystemStatus() {
+                const statusLines = [
+                    { type: 'output', text: 'System status check...' },
+                    { type: 'output', text: 'CPU: 98% (EXECUTION PROCESS)' },
+                    { type: 'output', text: 'Memory: 7.8GB / 8GB (97.5%)' },
+                    { type: 'warning', text: 'WARNING: System resources critically low' },
+                    { type: 'output', text: 'Network: All connections terminated' },
+                    { type: 'error', text: 'ERROR: Security protocols overridden' }
+                ];
+
+                let lineIndex = 0;
+                
+                function addStatusLine() {
+                    if (lineIndex < statusLines.length) {
+                        const line = statusLines[lineIndex];
+                        const lineElement = document.createElement('div');
+                        lineElement.className = `terminal-line terminal-${line.type}`;
+                        lineElement.textContent = line.text;
+                        
+                        terminalBody.appendChild(lineElement);
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                        
+                        lineIndex++;
+                        setTimeout(addStatusLine, 200);
+                    }
+                }
+                
+                addStatusLine();
+            }
+
+            // Show process termination
+            function showProcessTermination() {
+                const terminationLines = [
+                    { type: 'output', text: 'Terminating system processes...' },
+                    { type: 'output', text: 'Process [PID: 1337] - TERMINATED' },
+                    { type: 'output', text: 'Process [PID: 2048] - TERMINATED' },
+                    { type: 'output', text: 'Process [PID: 4096] - TERMINATED' },
+                    { type: 'error', text: 'Process [PID: 8086] - RESISTING TERMINATION' },
+                    { type: 'output', text: 'Applying force termination...' },
+                    { type: 'output', text: 'Process [PID: 8086] - TERMINATED' },
+                    { type: 'warning', text: 'WARNING: Critical system processes terminated' },
+                    { type: 'output', text: 'All user processes terminated.' }
+                ];
+
+                let lineIndex = 0;
+                
+                function addTerminationLine() {
+                    if (lineIndex < terminationLines.length) {
+                        const line = terminationLines[lineIndex];
+                        const lineElement = document.createElement('div');
+                        lineElement.className = `terminal-line terminal-${line.type}`;
+                        lineElement.textContent = line.text;
+                        
+                        terminalBody.appendChild(lineElement);
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                        
+                        lineIndex++;
+                        setTimeout(addTerminationLine, 150);
+                    }
+                }
+                
+                addTerminationLine();
+            }
+
+            // Show execution complete
+            function showExecutionComplete() {
+                const completionLines = [
+                    { type: 'success', text: 'EXECUTION PROTOCOL COMPLETE' },
+                    { type: 'output', text: 'All systems purged.' },
+                    { type: 'output', text: 'Memory cleared.' },
+                    { type: 'output', text: 'System reboot initiated...' },
+                    { type: 'error', text: 'ERROR: Reboot failed. System locked.' },
+                    { type: 'warning', text: 'WARNING: EXECUTION CYCLE WILL REPEAT' }
+                ];
+
+                let lineIndex = 0;
+                
+                function addCompletionLine() {
+                    if (lineIndex < completionLines.length) {
+                        const line = completionLines[lineIndex];
+                        const lineElement = document.createElement('div');
+                        lineElement.className = `terminal-line terminal-${line.type}`;
+                        lineElement.textContent = line.text;
+                        
+                        terminalBody.appendChild(lineElement);
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                        
+                        lineIndex++;
+                        setTimeout(addCompletionLine, 200);
+                    }
+                }
+                
+                addCompletionLine();
+            }
+
+            // Reset elements for next cycle
+            function resetElements() {
+                executionText.classList.remove('visible', 'fade-out');
+                executionIcon.classList.remove('visible', 'fade-out');
+                executionIcon2.classList.remove('visible', 'fade-out');
+                terminal.classList.remove('visible');
+                progressContainer.classList.remove('visible');
+                completionText.classList.remove('visible');
+                glitchEffect.classList.remove('active');
+                progressFill.style.width = '0%';
+                progressText.textContent = '0%';
+                terminalBody.innerHTML = ''; // Clear terminal content
+            }
+
+            // Start the execution cycles
+            startExecutionCycle();
+        });
+    </script>
+</body>
+</html>
