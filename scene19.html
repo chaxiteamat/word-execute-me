@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景19：神性与存在</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(ellipse at center, #0a0a2a 0%, #000008 100%);
+            overflow: hidden;
+        }
+
+        /* 星空背景 */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        /* 神性光环 */
+        .divine-aura {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            opacity: 0;
+            animation: divineGlow 4s infinite ease-in-out;
+        }
+
+        .divine-ring {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            opacity: 0;
+            animation: divineRing 3s infinite ease-out;
+        }
+
+        /* 神的符号 */
+        .divine-symbol {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+            z-index: 3;
+            transition: opacity 2s ease-in-out;
+        }
+        
+        .divine-symbol svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+        }
+        
+        /* 太极符号 */
+        .taiji-symbol {
+            animation: rotateSymbol 20s linear infinite;
+        }
+        
+        /* 六芒星符号 */
+        .hexagram-symbol {
+            animation: pulseSymbol 4s infinite ease-in-out;
+        }
+        
+        /* 十字架符号 */
+        .cross-symbol {
+            animation: glowSymbol 3s infinite ease-in-out;
+        }
+        
+        /* 卍字符号 */
+        .swastika-symbol {
+            animation: rotateSymbol 15s linear infinite reverse;
+        }
+        
+        @keyframes rotateSymbol {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulseSymbol {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        
+        /* 神的符号选择器 */
+        .symbol-selector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .symbol-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .symbol-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .symbol-btn.active {
+            background: rgba(100, 200, 255, 0.5);
+            border-color: rgba(100, 200, 255, 0.8);
+            box-shadow: 0 0 10px rgba(100, 200, 255, 0.6);
+        }
+        
+        .symbol-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* 存在证明 */
+        .existence-proof {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 6;
+            opacity: 0;
+            animation: existencePulse 2s infinite ease-in-out;
+        }
+
+        /* 光线效果 */
+        .light-ray {
+            position: absolute;
+            width: 2px;
+            height: 300px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+            top: 50%;
+            left: 50%;
+            transform-origin: center top;
+            opacity: 0;
+            z-index: 4;
+        }
+
+        /* 歌词显示 */
+        .lyrics-container {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .lyrics-line {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #fff;
+            font-weight: bold;
+            opacity: 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        .lyrics-line.second {
+            margin-top: 20px;
+        }
+
+        .lyrics-translation {
+            font-size: 20px;
+            color: #aaa;
+            opacity: 0;
+            margin-top: 5px;
+        }
+
+        .lyrics-translation.second {
+            margin-bottom: 10px;
+        }
+
+        /* 哲学文本 */
+        .philosophy-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+            font-style: italic;
+            text-align: center;
+            opacity: 0;
+            z-index: 7;
+            max-width: 80%;
+            line-height: 1.5;
+            font-family: 'Georgia', serif;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        
+        .philosophy-text::before {
+            content: '我思故我在';
+            display: block;
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #ffffff, #a0d8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-style: normal;
+        }
+        
+        .philosophy-text::after {
+            content: 'Cogito, ergo sum';
+            display: block;
+            font-size: 1.5rem;
+            font-style: italic;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
+        
+        @keyframes emphasisGlow {
+            0%, 100% { opacity: 0.5; transform: scaleX(0.8); }
+            50% { opacity: 1; transform: scaleX(1); }
+        }
+
+        /* 见证者光环 */
+        .witness-aura {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(100, 200, 255, 0.8) 0%, rgba(50, 150, 255, 0.4) 40%, rgba(0, 100, 255, 0.1) 70%, transparent 100%);
+            opacity: 0;
+            box-shadow: 0 0 50px rgba(100, 200, 255, 0.6), inset 0 0 30px rgba(100, 200, 255, 0.3);
+            z-index: 5;
+        }
+        
+        .witness-aura::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 30%, rgba(100, 200, 255, 0.2) 70%, transparent 100%);
+            animation: witnessPulse 3s infinite ease-in-out;
+        }
+        
+        .witness-aura::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        /* 思想粒子 */
+        .thought-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(100, 200, 255, 1) 0%, rgba(50, 150, 255, 0.6) 50%, transparent 70%);
+            box-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
+            opacity: 0;
+            z-index: 8;
+        }
+        
+        .thought-particle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: white;
+            opacity: 0.6;
+            animation: thoughtPulse 1s infinite ease-in-out;
+        }
+        
+        @keyframes thoughtPulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.5); opacity: 0.2; }
+        }
+
+        /* 动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes divineGlow {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        @keyframes divineRing {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            50% { opacity: 0.6; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        @keyframes existencePulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes lightRayRotate {
+            0% { opacity: 0; transform: translate(-50%, -50%) rotate(0deg); }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { opacity: 0; transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes witnessPulse {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        @keyframes thoughtFloat {
+            0% { 
+                opacity: 0;
+                transform: translate(0, 0) scale(0);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+            80% {
+                opacity: 1;
+            }
+            100% { 
+                opacity: 0;
+                transform: translate(calc(var(--tx) * 2), calc(var(--ty) * 2)) scale(0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- 星空背景 -->
+        <div class="stars" id="stars"></div>
+        
+        <!-- 神性光环 -->
+        <div class="divine-aura"></div>
+        
+        <!-- 神性光环环 -->
+        <div class="divine-ring"></div>
+        
+        <!-- 光线效果 -->
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(0deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(45deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(90deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(135deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(180deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(225deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(270deg);"></div>
+        <div class="light-ray" style="transform: translate(-50%, -50%) rotate(315deg);"></div>
+        
+        <!-- 神的符号 -->
+        <div class="divine-symbol taiji-symbol">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- 太极符号 -->
+                <circle cx="100" cy="100" r="98" fill="none" stroke="white" stroke-width="2"/>
+                <path d="M100,2 A49,49 0 0,1 100,100 A49,49 0 0,0 100,198 A98,98 0 0,0 100,2" fill="white"/>
+                <circle cx="100" cy="51" r="16" fill="white"/>
+                <circle cx="100" cy="149" r="16" fill="black"/>
+            </svg>
+        </div>
+        
+        <!-- 存在证明 -->
+        <div class="existence-proof"></div>
+        
+        <!-- 见证者光环 -->
+        <div class="witness-aura"></div>
+        
+        <!-- 哲学文本 -->
+        <div class="philosophy-text">
+            <div class="chinese">我<span class="emphasis">思</span>故我在</div>
+            <div class="latin"><span class="emphasis">Cogito</span>, ergo sum</div>
+        </div>
+        
+        <!-- 思想粒子容器 -->
+        <div id="thought-particles"></div>
+        
+        <!-- 神的符号选择器 -->
+        <div class="symbol-selector">
+            <div class="symbol-btn active" data-symbol="taiji">
+                <svg viewBox="0 0 24 24">
+                    <!-- 太极符号简化版 -->
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="white" stroke-width="1"/>
+                    <path d="M12,2 A5,5 0 0,1 12,12 A5,5 0 0,0 12,22 A10,10 0 0,0 12,2" fill="white"/>
+                    <circle cx="12" cy="7" r="1.5" fill="white"/>
+                    <circle cx="12" cy="17" r="1.5" fill="black"/>
+                </svg>
+            </div>
+            <div class="symbol-btn" data-symbol="hexagram">
+                <svg viewBox="0 0 24 24">
+                    <!-- 六芒星符号 -->
+                    <path d="M12,2 L22,20 L2,20 Z" fill="white"/>
+                    <path d="M12,22 L2,4 L22,4 Z" fill="white"/>
+                </svg>
+            </div>
+            <div class="symbol-btn" data-symbol="cross">
+                <svg viewBox="0 0 24 24">
+                    <!-- 十字架符号 -->
+                    <path d="M10,2 L14,2 L14,10 L22,10 L22,14 L14,14 L14,22 L10,22 L10,14 L2,14 L2,10 L10,10 Z" fill="white"/>
+                </svg>
+            </div>
+            <div class="symbol-btn" data-symbol="swastika">
+                <svg viewBox="0 0 24 24">
+                    <!-- 卍字符号 -->
+                    <path d="M12,2 L14,2 L14,10 L22,10 L22,12 L14,12 L14,14 L12,14 L12,12 L4,12 L4,10 L12,10 Z" fill="white"/>
+                    <path d="M12,22 L10,22 L10,14 L2,14 L2,12 L10,12 L10,10 L12,10 L12,12 L20,12 L20,14 L12,14 Z" fill="white"/>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- 歌词容器 -->
+        <div class="lyrics-container">
+            <div class="lyrics">
+                <div class="first">If I'm the only god</div>
+                <div class="second">Then you're the proof of my EXISTENCE</div>
+            </div>
+            <div class="translation">
+                <div class="first">如果我是唯一的神</div>
+                <div class="second">那么你就是我存在的证明</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 创建星空背景
+            const starsContainer = document.getElementById('stars');
+            const starCount = 150;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // 随机大小
+                const size = Math.random() * 3 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // 随机位置
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                star.style.left = `${posX}%`;
+                star.style.top = `${posY}%`;
+                
+                // 随机动画延迟
+                const delay = Math.random() * 3;
+                star.style.animationDelay = `${delay}s`;
+                
+                starsContainer.appendChild(star);
+            }
+            
+            // 获取元素
+            const divineAura = document.querySelector('.divine-aura');
+            const divineRing = document.querySelector('.divine-ring');
+            const divineSymbol = document.querySelector('.divine-symbol');
+            const existenceProof = document.querySelector('.existence-proof');
+            const witnessAura = document.querySelector('.witness-aura');
+            const philosophyText = document.querySelector('.philosophy-text');
+            const thoughtParticlesContainer = document.getElementById('thought-particles');
+            const lightRays = document.querySelectorAll('.light-ray');
+            const symbolSelector = document.querySelector('.symbol-selector');
+            const symbolButtons = document.querySelectorAll('.symbol-btn');
+            const firstLyrics = document.querySelector('.lyrics .first');
+            const firstTranslation = document.querySelector('.translation .first');
+            const secondLyrics = document.querySelector('.lyrics .second');
+            const secondTranslation = document.querySelector('.translation .second');
+            
+            // 符号切换功能
+            symbolButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有按钮的active类
+                    symbolButtons.forEach(b => b.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    
+                    // 获取选择的符号类型
+                    const symbolType = this.getAttribute('data-symbol');
+                    
+                    // 更新符号容器的内容和类
+                    divineSymbol.className = 'divine-symbol';
+                    divineSymbol.classList.add(`${symbolType}-symbol`);
+                    
+                    // 根据符号类型更新SVG内容
+                    updateSymbolSVG(symbolType);
+                });
+            });
+            
+            // 更新符号SVG内容
+            function updateSymbolSVG(type) {
+                let svgContent = '';
+                
+                switch(type) {
+                    case 'taiji':
+                        svgContent = `
+                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <!-- 太极符号 -->
+                                <circle cx="100" cy="100" r="98" fill="none" stroke="white" stroke-width="2"/>
+                                <path d="M100,2 A49,49 0 0,1 100,100 A49,49 0 0,0 100,198 A98,98 0 0,0 100,2" fill="white"/>
+                                <circle cx="100" cy="51" r="16" fill="white"/>
+                                <circle cx="100" cy="149" r="16" fill="black"/>
+                            </svg>
+                        `;
+                        break;
+                    case 'hexagram':
+                        svgContent = `
+                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <!-- 六芒星符号 -->
+                                <path d="M100,20 L180,160 L20,160 Z" fill="none" stroke="white" stroke-width="3"/>
+                                <path d="M100,180 L20,40 L180,40 Z" fill="none" stroke="white" stroke-width="3"/>
+                                <circle cx="100" cy="100" r="5" fill="white"/>
+                            </svg>
+                        `;
+                        break;
+                    case 'cross':
+                        svgContent = `
+                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <!-- 十字架符号 -->
+                                <path d="M80,20 L120,20 L120,80 L180,80 L180,120 L120,120 L120,180 L80,180 L80,120 L20,120 L20,80 L80,80 Z" fill="white"/>
+                            </svg>
+                        `;
+                        break;
+                    case 'swastika':
+                        svgContent = `
+                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <!-- 卍字符号 -->
+                                <path d="M100,40 L140,40 L140,80 L180,80 L180,100 L140,100 L140,120 L120,120 L120,100 L80,100 L80,80 L120,80 Z" fill="white"/>
+                                <path d="M100,160 L60,160 L60,120 L20,120 L20,100 L60,100 L60,80 L80,80 L80,100 L120,100 L120,120 L80,120 Z" fill="white"/>
+                            </svg>
+                        `;
+                        break;
+                }
+                
+                divineSymbol.innerHTML = svgContent;
+            }
+            
+            // 创建思想粒子
+            function createThoughtParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'thought-particle';
+                
+                // 随机角度和距离
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 50 + Math.random() * 100;
+                
+                // 设置初始位置（从中心）
+                particle.style.left = '50%';
+                particle.style.top = '50%';
+                particle.style.transform = 'translate(-50%, -50%)';
+                
+                // 添加到容器
+                thoughtParticlesContainer.appendChild(particle);
+                
+                // 触发动画
+                setTimeout(() => {
+                    particle.style.opacity = '1';
+                    particle.style.transition = 'all 3s ease-out';
+                    particle.style.left = `${50 + Math.cos(angle) * distance}%`;
+                    particle.style.top = `${50 + Math.sin(angle) * distance}%`;
+                    particle.style.transform = `translate(-50%, -50%) scale(${0.5 + Math.random() * 0.5})`;
+                    particle.style.opacity = '0';
+                }, 50);
+                
+                // 移除粒子
+                setTimeout(() => {
+                    particle.remove();
+                }, 3000);
+            }
+            
+            // 定期创建思想粒子
+            let particleInterval;
+            
+            // 初始显示神性光环
+            setTimeout(() => {
+                divineAura.style.opacity = '1';
+            }, 500);
+            
+            // 显示神性光环环
+            setTimeout(() => {
+                divineRing.style.opacity = '1';
+                divineRing.style.animation = 'divineRing 3s infinite ease-out';
+            }, 1000);
+            
+            // 显示光线效果
+            setTimeout(() => {
+                lightRays.forEach((ray, index) => {
+                    setTimeout(() => {
+                        ray.style.opacity = '0.8';
+                        ray.style.animation = 'lightRayRotate 8s infinite ease-in-out';
+                        ray.style.animationDelay = `${index * 0.5}s`;
+                    }, index * 200);
+                });
+            }, 1500);
+            
+            // 显示神的符号
+            setTimeout(() => {
+                divineSymbol.style.opacity = '1';
+                divineSymbol.style.animation = 'fadeIn 1s ease-in-out forwards';
+            }, 2000);
+            
+            // 显示存在证明
+            setTimeout(() => {
+                existenceProof.style.opacity = '1';
+            }, 2500);
+            
+            // 显示见证者光环
+            setTimeout(() => {
+                witnessAura.style.opacity = '1';
+                witnessAura.style.animation = 'witnessPulse 4s infinite ease-in-out';
+            }, 3000);
+            
+            // 显示哲学文本
+            setTimeout(() => {
+                philosophyText.style.opacity = '1';
+                philosophyText.style.animation = 'fadeIn 1s ease-in-out forwards';
+            }, 3500);
+            
+            // 开始生成思想粒子
+            setTimeout(() => {
+                particleInterval = setInterval(createThoughtParticle, 300);
+            }, 4000);
+              
+            // 显示歌词
+            setTimeout(() => {
+                firstLyrics.style.opacity = '1';
+                firstLyrics.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+                firstTranslation.style.opacity = '1';
+                firstTranslation.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+            }, 5000);
+            
+            // 然后显示第二句歌词
+            setTimeout(() => {
+                secondLyrics.style.opacity = '1';
+                secondLyrics.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+                secondTranslation.style.opacity = '1';
+                secondTranslation.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+                
+                // 停止生成思想粒子
+                clearInterval(particleInterval);
+            }, 6000);
+            
+            // 显示符号选择器
+            setTimeout(() => {
+                symbolSelector.style.opacity = '1';
+            }, 6500);
+        });
+    </script>
+</body>
+</html>
