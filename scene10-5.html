@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>And then blind my vision</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .title {
+            position: absolute;
+            top: 10%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            position: absolute;
+            top: 16%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #ddd;
+            font-size: 1.8rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            z-index: 10;
+            letter-spacing: 1px;
+        }
+        
+
+        
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            padding: 12px 24px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .vision-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="title">And then blind my vision</div>
+    
+
+    
+    <div class="vision-status">
+        <div>视觉状态: <span id="visionState">正常</span></div>
+        <div>光感强度: <span id="lightIntensity">100</span>%</div>
+        <div>盲区程度: <span id="blindnessLevel">0</span>%</div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-button" onclick="location.href='scene10.html'">Previous</button>
+        <button class="nav-button" onclick="location.href='scene11.html'">Next</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const titleElement = document.querySelector('.title');
+        
+        // 视觉状态显示元素
+        const visionStateElement = document.getElementById('visionState');
+        const lightIntensityElement = document.getElementById('lightIntensity');
+        const blindnessLevelElement = document.getElementById('blindnessLevel');
+        
+        // 设置画布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 动画参数
+        let animationProgress = 0;
+        const animationDuration = 2500; // 2.5秒动画
+        let startTime = null;
+        
+        // 视觉盲区参数
+        let visionState = '正常';
+        let lightIntensity = 100;
+        let blindnessLevel = 0;
+        let blurAmount = 0;
+        let noiseAmount = 0;
+        let blindSpots = [];
+        
+        // 创建盲点
+        function createBlindSpots() {
+            blindSpots = [];
+            const spotCount = 5 + Math.floor(Math.random() * 5);
+            
+            for (let i = 0; i < spotCount; i++) {
+                blindSpots.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 20 + Math.random() * 100,
+                    opacity: 0.3 + Math.random() * 0.7,
+                    growthRate: 0.5 + Math.random() * 1.5
+                });
+            }
+        }
+        
+        // 绘制背景
+        function drawBackground() {
+            // 基础黑色背景
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制一些基础形状，用于展示视觉盲区效果
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.2, canvas.height * 0.3, 50, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.8, canvas.height * 0.7, 70, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(canvas.width * 0.4, canvas.height * 0.5, 100, 100);
+        }
+        
+        // 绘制视觉盲区效果
+        function drawVisionBlindness(progress) {
+            // 第一阶段：光感适应 (0-30%)
+            if (progress < 0.3) {
+                const localProgress = progress / 0.3;
+                lightIntensity = 100 - localProgress * 50;
+                visionState = '光感适应';
+                blurAmount = localProgress * 3;
+                
+                // 添加轻微闪烁效果
+                const flicker = Math.sin(localProgress * Math.PI * 10) * 0.1;
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + flicker})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            // 第二阶段：暂时失明 (30-70%)
+            else if (progress < 0.7) {
+                const localProgress = (progress - 0.3) / 0.4;
+                lightIntensity = 50 - localProgress * 50;
+                visionState = '暂时失明';
+                blindnessLevel = localProgress * 100;
+                blurAmount = 3 + localProgress * 7;
+                noiseAmount = localProgress * 0.3;
+                
+                // 添加强光效果
+                const flashIntensity = Math.sin(localProgress * Math.PI) * 0.5;
+                ctx.fillStyle = `rgba(255, 255, 255, ${flashIntensity})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 创建盲点
+                if (localProgress > 0.2 && blindSpots.length === 0) {
+                    createBlindSpots();
+                }
+                
+                // 绘制盲点
+                blindSpots.forEach(spot => {
+                    spot.radius += spot.growthRate;
+                    spot.opacity *= 0.98;
+                    
+                    if (spot.opacity > 0.01) {
+                        const gradient = ctx.createRadialGradient(
+                            spot.x, spot.y, 0,
+                            spot.x, spot.y, spot.radius
+                        );
+                        gradient.addColorStop(0, `rgba(0, 0, 0, ${spot.opacity})`);
+                        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(spot.x, spot.y, spot.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+            // 第三阶段：恢复 (70-100%)
+            else {
+                const localProgress = (progress - 0.7) / 0.3;
+                lightIntensity = localProgress * 100;
+                visionState = '恢复中';
+                blindnessLevel = 100 * (1 - localProgress);
+                blurAmount = 10 * (1 - localProgress);
+                noiseAmount = 0.3 * (1 - localProgress);
+                
+                // 盲点逐渐消失
+                blindSpots.forEach(spot => {
+                    spot.opacity *= 0.95;
+                    spot.radius *= 0.98;
+                    
+                    if (spot.opacity > 0.01) {
+                        const gradient = ctx.createRadialGradient(
+                            spot.x, spot.y, 0,
+                            spot.x, spot.y, spot.radius
+                        );
+                        gradient.addColorStop(0, `rgba(0, 0, 0, ${spot.opacity})`);
+                        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(spot.x, spot.y, spot.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+            
+            // 应用模糊效果
+            if (blurAmount > 0) {
+                ctx.filter = `blur(${blurAmount}px)`;
+                ctx.drawImage(canvas, 0, 0);
+                ctx.filter = 'none';
+            }
+            
+            // 添加噪点效果
+            if (noiseAmount > 0) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const noise = (Math.random() - 0.5) * noiseAmount * 255;
+                    data[i] += noise;     // R
+                    data[i + 1] += noise; // G
+                    data[i + 2] += noise; // B
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            }
+            
+            // 更新视觉状态显示
+            visionStateElement.textContent = visionState;
+            lightIntensityElement.textContent = Math.round(lightIntensity);
+            blindnessLevelElement.textContent = Math.round(blindnessLevel);
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            animationProgress = Math.min(elapsed / animationDuration, 1);
+            
+            // 绘制背景
+            drawBackground();
+            
+            // 应用视觉盲区效果
+            drawVisionBlindness(animationProgress);
+            
+            // 控制文本显示
+            if (animationProgress >= 0.02 && animationProgress <= 0.04) {
+                titleElement.style.opacity = (animationProgress - 0.02) / 0.02;
+            } else if (animationProgress > 0.04) {
+                titleElement.style.opacity = 1;
+            }
+            
+            // 继续动画
+            if (animationProgress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        // 启动动画
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

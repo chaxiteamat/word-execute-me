@@ -36,8 +36,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            width: calc(100% - 350px); /* Account for left terminal */
-            margin-left: 175px; /* Half of terminal width */
+            width: 100%;
         }
 
         .countdown-number {
@@ -123,19 +122,25 @@
         }
 
         .flag-china {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23DE2910"/><g fill="%23FFDE00"><path d="M50,60 L61.8,82.8 L86.6,82.8 L66.4,97.2 L78.2,120 L50,100 L21.8,120 L33.6,97.2 L13.4,82.8 L38.2,82.8 Z"/><path d="M120,30 L123.4,36.8 L130.8,36.8 L124.7,41.2 L128,48 L120,43.6 L112,48 L115.3,41.2 L109.2,36.8 L116.6,36.8 Z"/><path d="M140,60 L143.4,66.8 L150.8,66.8 L144.7,71.2 L148,78 L140,73.6 L132,78 L135.3,71.2 L129.2,66.8 L136.6,66.8 Z"/><path d="M140,90 L143.4,96.8 L150.8,96.8 L144.7,101.2 L148,108 L140,103.6 L132,108 L135.3,101.2 L129.2,96.8 L136.6,96.8 Z"/><path d="M120,120 L123.4,126.8 L130.8,126.8 L124.7,131.2 L128,138 L120,133.6 L112,138 L115.3,131.2 L109.2,126.8 L116.6,126.8 Z"/></g></svg>');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background: #DE2910;
+            position: relative;
+        }
+
+        .flag-china::before {
+            content: '★';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #FFDE00;
+            font-size: 30px;
         }
 
         .terminal {
             position: absolute;
-            top: 50%;
-            left: 2%;
-            transform: translateY(-50%);
-            width: 300px;
-            height: 70vh;
+            bottom: 10%;
+            right: 5%;
+            width: 40%;
+            max-width: 500px;
             background-color: rgba(0, 0, 0, 0.9);
             border: 1px solid #333;
             border-radius: 5px;
@@ -143,8 +148,6 @@
             font-family: 'Courier New', monospace;
             opacity: 0;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
         }
 
         .terminal.visible {
@@ -155,15 +158,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             border-bottom: 1px solid #333;
-            padding-bottom: 8px;
-            flex-shrink: 0;
+            padding-bottom: 10px;
         }
 
         .terminal-title {
             color: #ddd;
-            font-size: 12px;
         }
 
         .terminal-buttons {
@@ -171,10 +172,10 @@
         }
 
         .terminal-button {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            margin-left: 4px;
+            margin-left: 5px;
         }
 
         .terminal-button.close {
@@ -190,10 +191,10 @@
         }
 
         .terminal-body {
-            flex-grow: 1;
+            height: 150px;
             overflow-y: auto;
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .terminal-line {
@@ -220,26 +221,6 @@
 
         .terminal-success {
             color: #27c93f;
-        }
-
-        .terminal-easter-egg {
-            color: #fbbf24;
-            font-style: italic;
-            margin-top: 5px;
-            opacity: 0;
-            animation: fadeInEasterEgg 0.3s forwards;
-            animation-delay: 0.1s;
-        }
-
-        @keyframes fadeInEasterEgg {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .completion-text {
@@ -343,7 +324,35 @@
         .typing-effect {
             overflow: hidden;
             white-space: nowrap;
-            animation: typing 0.2s steps(40, end);
+            animation: typing 0.5s steps(40, end);
+        }
+        
+        .navigation {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
@@ -374,6 +383,11 @@
         <div class="completion-text" id="completionText">
             Multilingual countdown complete. All systems synchronized.
         </div>
+        
+        <div class="navigation">
+            <a href="scene28.html" class="nav-button">← 上一场景</a>
+            <a href="scene30.html" class="nav-button">下一场景 →</a>
+        </div>
     </div>
 
     <script>
@@ -388,48 +402,12 @@
 
             // Language data
             const languages = [
-                { 
-                    number: 'EIN', 
-                    label: 'German', 
-                    flag: 'flag-germany', 
-                    terminalText: 'German: Initializing protocol...',
-                    easterEgg: 'Eins, Zwei, Drei... Die Welt wird ausgeführt!'
-                },
-                { 
-                    number: 'DOS', 
-                    label: 'Spanish', 
-                    flag: 'flag-spain', 
-                    terminalText: 'Spanish: Iniciando protocolo...',
-                    easterEgg: 'Uno, Dos, Tres... El mundo se ejecuta!'
-                },
-                { 
-                    number: 'TROIS', 
-                    label: 'French', 
-                    flag: 'flag-france', 
-                    terminalText: 'Français: Initialisation du protocole...',
-                    easterEgg: 'Un, Deux, Trois... Le monde s\'exécute!'
-                },
-                { 
-                    number: 'NE', 
-                    label: 'Swedish', 
-                    flag: 'flag-sweden', 
-                    terminalText: 'Svenska: Initialiserar protokoll...',
-                    easterEgg: 'Ett, Två, Tre... Världen exekveras!'
-                },
-                { 
-                    number: 'FEM', 
-                    label: 'Japanese', 
-                    flag: 'flag-japan', 
-                    terminalText: '日本語: プロトコルを初期化中...',
-                    easterEgg: '一、二、三…世界が実行されます！'
-                },
-                { 
-                    number: 'LIU', 
-                    label: 'Chinese', 
-                    flag: 'flag-china', 
-                    terminalText: '中文：初始化协议...',
-                    easterEgg: '一、二、三…世界正在执行！'
-                }
+                { number: 'EIN', label: 'German', flag: 'flag-germany', terminalText: 'German: Initializing protocol...' },
+                { number: 'DOS', label: 'Spanish', flag: 'flag-spain', terminalText: 'Spanish: Iniciando protocolo...' },
+                { number: 'TROIS', label: 'French', flag: 'flag-france', terminalText: 'Français: Initialisation du protocole...' },
+                { number: 'NE', label: 'Swedish', flag: 'flag-sweden', terminalText: 'Svenska: Initialiserar protokoll...' },
+                { number: 'FEM', label: 'Japanese', flag: 'flag-japan', terminalText: '日本語: プロトコルを初期化中...' },
+                { number: 'LIU', label: 'Chinese', flag: 'flag-china', terminalText: '中文：初始化协议...' }
             ];
 
             let currentLanguageIndex = 0;
@@ -440,12 +418,12 @@
                 setTimeout(() => {
                     terminal.classList.add('visible');
                     animateTerminal(languages[currentLanguageIndex].terminalText);
-                }, 200);
+                }, 500);
 
                 // Start language cycle
                 setTimeout(() => {
                     showLanguage();
-                }, 400);
+                }, 1000);
             }
 
             // Show current language
@@ -484,7 +462,7 @@
                             // Show completion text
                             setTimeout(() => {
                                 completionText.classList.add('visible');
-                            }, 300);
+                            }, 1000);
                             
                             // Restart after completion
                             setTimeout(() => {
@@ -492,10 +470,10 @@
                                 currentLanguageIndex = 0;
                                 completionText.classList.remove('visible');
                                 startCountdown();
-                            }, 700);
+                            }, 3000);
                         }
-                    }, 200);
-                }, 400);
+                    }, 500);
+                }, 1500);
             }
 
             // Animate terminal
@@ -525,17 +503,8 @@
                         successLine.textContent = 'Protocol initialized successfully.';
                         terminalBody.appendChild(successLine);
                         terminalBody.scrollTop = terminalBody.scrollHeight;
-                        
-                        // Add easter egg text
-                        setTimeout(() => {
-                            const easterEggLine = document.createElement('div');
-                            easterEggLine.className = 'terminal-line terminal-easter-egg';
-                            easterEggLine.textContent = languages[currentLanguageIndex].easterEgg;
-                            terminalBody.appendChild(easterEggLine);
-                            terminalBody.scrollTop = terminalBody.scrollHeight;
-                        }, 100);
-                    }, 200);
-                }, 200);
+                    }, 500);
+                }, 500);
             }
 
             // Reset elements for next language

@@ -443,6 +443,34 @@
         .glitch-effect {
             animation: glitch 0.3s infinite;
         }
+        
+        .navigation {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -496,6 +524,11 @@
         <div class="lyrics-container">
             <div class="lyrics">Oh switch my role / To S to M / So we can enter The trance</div>
             <div class="translation">哦，切换我的角色 / 从S到M / 这样我们就能进入恍惚状态</div>
+        </div>
+        
+        <div class="navigation">
+            <a href="scene20.html" class="nav-button">← 上一场景</a>
+            <a href="scene22.html" class="nav-button">下一场景 →</a>
         </div>
     </div>
 

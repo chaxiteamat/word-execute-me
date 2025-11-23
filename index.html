@@ -34,7 +34,26 @@
             width: 100%;
             height: 100%;
             border: none;
+            background-color: #000;
             display: none;
+        }
+        
+        .scene-frame.active {
+            display: block;
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff3366;
+            font-size: 18px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ff3366;
         }
         
         .scene-frame.active {
@@ -398,14 +417,23 @@
             // 更新UI
             updateUI();
             
+            // 清除现有场景和错误信息
+            const existingFrames = sceneContainer.querySelectorAll('.scene-frame');
+            existingFrames.forEach(frame => frame.remove());
+            
+            const errorMessages = sceneContainer.querySelectorAll('.error-message');
+            errorMessages.forEach(msg => msg.remove());
+            
             // 创建新的iframe
             const iframe = document.createElement('iframe');
             iframe.className = 'scene-frame';
+            // 使用相对路径加载场景文件
             iframe.src = scenes[index].file;
-            
-            // 清除现有场景
-            const existingFrames = sceneContainer.querySelectorAll('.scene-frame');
-            existingFrames.forEach(frame => frame.remove());
+            iframe.style.display = 'block';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.backgroundColor = '#000';
             
             // 添加新场景
             sceneContainer.appendChild(iframe);
@@ -421,6 +449,26 @@
                     }, scenes[index].duration);
                 }
             });
+            
+            // 处理加载错误
+            iframe.addEventListener('error', () => {
+                console.error('Failed to load scene:', scenes[index].file);
+                loadingOverlay.classList.remove('active');
+                
+                // 显示错误信息
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.textContent = `无法加载场景: ${scenes[index].file}`;
+                sceneContainer.appendChild(errorMessage);
+            });
+            
+            // 设置超时检测，防止长时间加载
+            setTimeout(() => {
+                if (loadingOverlay.classList.contains('active')) {
+                    loadingOverlay.classList.remove('active');
+                    console.warn('Scene loading timeout:', scenes[index].file);
+                }
+            }, 5000); // 5秒超时
             
             // 更新场景列表中的活动状态
             const sceneItems = document.querySelectorAll('.scene-item');
@@ -553,15 +601,64 @@
         playPauseBtn.addEventListener('click', togglePlayPause);
         prevBtn.addEventListener('click', prevScene);
         nextBtn.addEventListener('click', nextScene);
-        volumeSlider.addEventListener('input', updateVolume);
+        volumeSlider.addEventListener('input', handleVolumeChange);
         fullscreenBtn.addEventListener('click', toggleFullscreen);
-        document.addEventListener('keydown', handleKeyboard);
+        document.addEventListener('keydown', handleKeyDown);
         
-        // 初始化
+        // 初始化应用
         function init() {
             initSceneList();
             loadScene(0);
             updateUI();
+            
+            // 添加窗口大小变化事件监听
+            window.addEventListener('resize', handleResize);
+        }
+        
+        // 处理窗口大小变化
+        function handleResize() {
+            // 可以在这里添加响应式调整逻辑
+        }
+        
+        // 处理键盘事件
+        function handleKeyDown(event) {
+            switch (event.key) {
+                case ' ':
+                    event.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                    prevScene();
+                    break;
+                case 'ArrowRight':
+                    nextScene();
+                    break;
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+                case 'm':
+                case 'M':
+                    toggleMute();
+                    break;
+            }
+        }
+        
+        // 处理音量变化
+        function handleVolumeChange() {
+            volume = volumeSlider.value / 100;
+            // 这里可以添加实际的音量控制逻辑
+        }
+        
+        // 切换静音
+        function toggleMute() {
+            if (volume > 0) {
+                volumeSlider.value = 0;
+                volume = 0;
+            } else {
+                volumeSlider.value = 50;
+                volume = 0.5;
+            }
         }
         
         // 启动应用

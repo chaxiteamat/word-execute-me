@@ -49,6 +49,20 @@
             background-color: #222;
         }
         
+        .nav-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #555;
+        }
+        
         .info {
             position: absolute;
             top: 20px;
@@ -84,6 +98,7 @@
     <div class="controls">
         <button id="playBtn">播放</button>
         <button id="resetBtn">重置</button>
+        <a href="scene2.html" class="nav-button">下一场景 →</a>
     </div>
 
     <script>
