@@ -180,6 +180,37 @@
                 opacity: 1;
             }
         }
+        
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            pointer-events: all;
+            backdrop-filter: blur(5px);
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -199,6 +230,11 @@
         
         <div class="life-fading"></div>
         <div class="final-black"></div>
+        
+        <div class="navigation">
+            <a href="scene36.html" class="nav-button">← 上一场景</a>
+            <a href="index.html" class="nav-button">返回首页 →</a>
+        </div>
     </div>
 </body>
 </html>

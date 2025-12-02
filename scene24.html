@@ -295,6 +295,34 @@
                 opacity: 0.5;
             }
         }
+        
+        .navigation {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .nav-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -333,6 +361,11 @@
         </div>
         
         <div class="completion-text" id="completionText">Alone in the void, echoes fade into silence</div>
+        
+        <div class="navigation">
+            <a href="scene23.html" class="nav-button">← 上一场景</a>
+            <a href="scene25.html" class="nav-button">下一场景 →</a>
+        </div>
     </div>
 
     <script>
